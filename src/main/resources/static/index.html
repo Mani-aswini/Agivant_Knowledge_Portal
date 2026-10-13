@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Enterprise Internal Knowledge Portal with AI Research Agent for document search and evidence-based Q&A.">
+    <title>Enterprise Knowledge Portal | AI Research Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Header & Top Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Enterprise Knowledge Portal</h1>
+                    <span class="brand-subtitle">AI Research Agent & Knowledge Base</span>
+                </div>
+            </div>
+
+            <!-- User Context / Role Switcher for Demonstration -->
+            <div class="user-auth-bar" id="userAuthBar">
+                <div class="user-badge" id="userBadge">
+                    <span class="user-avatar" id="userAvatar">A</span>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Alice Employee</span>
+                        <span class="user-role" id="userRole">ROLE_EMPLOYEE</span>
+                    </div>
+                </div>
+                <div class="role-switcher">
+                    <label for="demoUserSelect">Switch Persona:</label>
+                    <select id="demoUserSelect" class="form-select-sm">
+                        <option value="employee1">Alice (Employee)</option>
+                        <option value="hr_user">Helen (HR Manager)</option>
+                        <option value="admin_user">Arthur (Admin)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <nav class="nav-tabs" aria-label="Main Navigation">
+            <div class="nav-container">
+                <button class="nav-tab active" data-target="dashboardSection" id="tabDashboard">
+                    <span class="tab-icon">📊</span> Dashboard
+                </button>
+                <button class="nav-tab" data-target="searchSection" id="tabSearch">
+                    <span class="tab-icon">🔍</span> Knowledge Search
+                </button>
+                <button class="nav-tab" data-target="aiAgentSection" id="tabAiAgent">
+                    <span class="tab-icon">🤖</span> AI Research Agent
+                </button>
+                <button class="nav-tab" data-target="documentsSection" id="tabDocuments">
+                    <span class="tab-icon">📁</span> Document Management
+                </button>
+                <button class="nav-tab" data-target="feedbackSection" id="tabFeedback">
+                    <span class="tab-icon">⭐</span> Feedback
+                </button>
+                <button class="nav-tab" data-target="analyticsSection" id="tabAnalytics">
+                    <span class="tab-icon">📈</span> Analytics
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Global Notification Banner -->
+    <div id="alertBanner" class="alert-banner" style="display: none;">
+        <span id="alertMessage"></span>
+        <button class="alert-close" id="alertCloseBtn">&times;</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+        <!-- =================================================================== -->
+        <!-- SCREEN A: DASHBOARD -->
+        <!-- =================================================================== -->
+        <section id="dashboardSection" class="content-section active">
+            <div class="section-header">
+                <h2>Portal Overview & Metrics</h2>
+                <p class="section-desc">Real-time status of enterprise knowledge assets, feedback ratings, and AI activity.</p>
+            </div>
+
+            <!-- Stats KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-blue">📚</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="kpiActiveDocs">0</span>
+                        <span class="kpi-label">Active Documents</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-purple">📦</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="kpiArchivedDocs">0</span>
+                        <span class="kpi-label">Archived Documents</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-amber">🔄</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="kpiAwaitingReindex">0</span>
+                        <span class="kpi-label">Awaiting Re-indexing</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-green">⭐</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="kpiAvgRating">0.0</span>
+                        <span class="kpi-label">Average Satisfaction</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Links & Overview Tables -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Knowledge Asset Breakdown</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table" id="dashboardCategoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Document Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardCategoryTbody">
+                                <tr><td colspan="3" class="text-center">Loading category statistics...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Frequently Searched Categories</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table" id="dashboardSearchTable">
+                            <thead>
+                                <tr>
+                                    <th>Category Filter</th>
+                                    <th>Search Inquiries</th>
+                                    <th>Avg Results</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardSearchTbody">
+                                <tr><td colspan="3" class="text-center">Loading search history...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN B: KNOWLEDGE SEARCH -->
+        <!-- =================================================================== -->
+        <section id="searchSection" class="content-section">
+            <div class="section-header">
+                <h2>Knowledge Base Search</h2>
+                <p class="section-desc">Search approved policies, technical runbooks, and FAQs with transparent relevance scoring.</p>
+            </div>
+
+            <!-- Search Filter Bar -->
+            <div class="card search-box-card">
+                <form id="searchForm" class="search-form">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Enter keywords (e.g., annual leave, severity 1 incident, monitor stipend)..." required>
+                    </div>
+                    <div class="filter-controls">
+                        <select id="searchCategorySelect" class="form-select">
+                            <option value="">All Categories</option>
+                            <option value="POLICY">Policy</option>
+                            <option value="TECHNICAL_RUNBOOK">Technical Runbook</option>
+                            <option value="FAQ">FAQ</option>
+                        </select>
+                        <select id="searchStatusSelect" class="form-select">
+                            <option value="ACTIVE">Active Documents</option>
+                            <option value="ARCHIVED">Archived Documents</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary" id="searchSubmitBtn">Search</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Search Results Container -->
+            <div id="searchLoading" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Retrieving and scoring matching document chunks...</p>
+            </div>
+
+            <div id="searchMetaBar" class="search-meta-bar" style="display: none;">
+                <span id="searchResultCountText">0 results found</span>
+            </div>
+
+            <div id="searchResultsList" class="search-results-list">
+                <!-- Search result cards dynamically injected here -->
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN C: AI RESEARCH AGENT Q&A -->
+        <!-- =================================================================== -->
+        <section id="aiAgentSection" class="content-section">
+            <div class="section-header">
+                <h2>AI Research Agent</h2>
+                <p class="section-desc">Goal-driven agent workflow: Evidence Retrieval &rarr; Sufficiency Validation &rarr; Citation Synthesis.</p>
+            </div>
+
+            <div class="ai-prompt-card card">
+                <form id="aiAskForm">
+                    <div class="form-group">
+                        <label for="aiQuestionInput">Ask an enterprise question:</label>
+                        <textarea id="aiQuestionInput" class="form-textarea" rows="3" placeholder="e.g. How many days of annual leave are available? Or: What is the protocol for Severity 1 downtime and who is notified?" required></textarea>
+                    </div>
+                    <div class="ai-submit-row">
+                        <div class="sample-questions">
+                            <span class="sample-label">Try sample queries:</span>
+                            <button type="button" class="btn-chip" data-query="How many days of annual leave are available?">Leave Entitlement</button>
+                            <button type="button" class="btn-chip" data-query="What is the war room protocol for Severity 1 incidents?">Severity 1 Runbook</button>
+                            <button type="button" class="btn-chip" data-query="What is the allowance for remote work monitors and what are the leave rules?">Multi-Document Query</button>
+                            <button type="button" class="btn-chip" data-query="What is the recipe for making Italian pasta carbonara?">Unrelated (Test Abstention)</button>
+                            <button type="button" class="btn-chip" data-query="What are the confidential executive bonuses?">Restricted Check</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg" id="aiSubmitBtn">
+                            <span>Ask Agent</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Agent Loading State -->
+            <div id="aiLoading" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Agent executing tool workflow: searching authorized documents, retrieving passages, and validating citations...</p>
+            </div>
+
+            <!-- Agent Response Container -->
+            <div id="aiResponseContainer" class="ai-response-container" style="display: none;">
+                <div class="card response-card">
+                    <div class="response-header">
+                        <div class="response-title">
+                            <span class="ai-avatar">🤖</span>
+                            <h3>Agent Generated Answer</h3>
+                        </div>
+                        <div class="response-badges">
+                            <span id="aiModeBadge" class="badge badge-mode">SIMULATION</span>
+                            <span id="aiAbstainedBadge" class="badge badge-success" style="display: none;">ANSWERED</span>
+                        </div>
+                    </div>
+
+                    <div class="response-body">
+                        <div id="aiAnswerContent" class="ai-answer-text">
+                            <!-- Answer injected here -->
+                        </div>
+
+                        <!-- Reasoning / Guardrail Notes -->
+                        <div class="reasoning-box" id="aiReasoningBox">
+                            <strong>Agent Execution Log:</strong>
+                            <span id="aiReasoningNotes">Retrieved evidence validated against authorized clearance.</span>
+                        </div>
+                    </div>
+
+                    <!-- Verified Citations Section -->
+                    <div class="citations-section" id="citationsSection">
+                        <h4>Verified Document Citations (<span id="citationCount">0</span>)</h4>
+                        <div class="citations-grid" id="citationsGrid">
+                            <!-- Citation cards injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Feedback Link -->
+                    <div class="response-footer">
+                        <span>Was this answer helpful?</span>
+                        <button class="btn btn-sm btn-secondary" id="btnQuickFeedback">Submit Feedback</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN D: DOCUMENT MANAGEMENT -->
+        <!-- =================================================================== -->
+        <section id="documentsSection" class="content-section">
+            <div class="section-header">
+                <h2>Document Management</h2>
+                <p class="section-desc">Upload, segment, re-index, and safely archive approved enterprise documents.</p>
+            </div>
+
+            <!-- Upload Document Accordion/Card -->
+            <div class="card upload-card">
+                <div class="card-header">
+                    <h3>Upload New Document</h3>
+                </div>
+                <div class="card-body">
+                    <form id="documentUploadForm" class="upload-form" enctype="multipart/form-data">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="uploadTitle">Document Title *</label>
+                                <input type="text" id="uploadTitle" class="form-input" placeholder="e.g. Travel and Expense Reimbursement Policy" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="uploadCategory">Category *</label>
+                                <select id="uploadCategory" class="form-select" required>
+                                    <option value="POLICY">Policy</option>
+                                    <option value="TECHNICAL_RUNBOOK">Technical Runbook</option>
+                                    <option value="FAQ">FAQ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="uploadAccessLevel">Access Clearance Level *</label>
+                                <select id="uploadAccessLevel" class="form-select" required>
+                                    <option value="PUBLIC">PUBLIC (All employees)</option>
+                                    <option value="EMPLOYEE">EMPLOYEE (General staff, HR, Admin)</option>
+                                    <option value="HR">HR (HR specialists & Admin only)</option>
+                                    <option value="ADMIN">ADMIN (System Administrators only)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="uploadFile">Select File (.txt or .pdf, max 10MB) *</label>
+                                <input type="file" id="uploadFile" class="form-file" accept=".txt,.pdf" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="uploadDescription">Description (Optional)</label>
+                            <input type="text" id="uploadDescription" class="form-input" placeholder="Brief summary of document purpose and scope">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">
+                                <span>Upload and Index Document</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Filter & Document List Table -->
+            <div class="card">
+                <div class="card-header doc-table-header">
+                    <h3>Accessible Enterprise Documents</h3>
+                    <div class="table-filters">
+                        <select id="docListCategoryFilter" class="form-select-sm">
+                            <option value="">All Categories</option>
+                            <option value="POLICY">Policy</option>
+                            <option value="TECHNICAL_RUNBOOK">Technical Runbook</option>
+                            <option value="FAQ">FAQ</option>
+                        </select>
+                        <select id="docListStatusFilter" class="form-select-sm">
+                            <option value="ACTIVE">Active</option>
+                            <option value="ARCHIVED">Archived</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" id="btnRefreshDocs">Refresh</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table" id="documentsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Clearance</th>
+                                    <th>Version</th>
+                                    <th>Status</th>
+                                    <th>Chunks</th>
+                                    <th>Updated At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documentsTableTbody">
+                                <tr><td colspan="9" class="text-center">Loading documents...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN E: FEEDBACK -->
+        <!-- =================================================================== -->
+        <section id="feedbackSection" class="content-section">
+            <div class="section-header">
+                <h2>Answer Quality Feedback</h2>
+                <p class="section-desc">Submit ratings and observations on AI generated answers to improve retrieval accuracy.</p>
+            </div>
+
+            <div class="card feedback-card">
+                <form id="feedbackForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="feedbackDocSelect">Target Document *</label>
+                            <select id="feedbackDocSelect" class="form-select" required>
+                                <option value="">Select an accessible document...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="feedbackAnswerRef">Answer Reference Identifier *</label>
+                            <input type="text" id="feedbackAnswerRef" class="form-input" value="ANS-MANUAL-REVIEW" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="feedbackQuestion">Inquiry / Question Text *</label>
+                        <input type="text" id="feedbackQuestion" class="form-input" placeholder="e.g. How many days of annual leave are available?" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Satisfaction Rating (1 to 5 Stars) *</label>
+                        <div class="star-rating" id="starRatingGroup">
+                            <button type="button" class="star-btn" data-value="1">★</button>
+                            <button type="button" class="star-btn" data-value="2">★</button>
+                            <button type="button" class="star-btn" data-value="3">★</button>
+                            <button type="button" class="star-btn" data-value="4">★</button>
+                            <button type="button" class="star-btn active" data-value="5">★</button>
+                        </div>
+                        <input type="hidden" id="feedbackRatingValue" value="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="feedbackComment">Comments / Suggestions</label>
+                        <textarea id="feedbackComment" class="form-textarea" rows="3" placeholder="Provide context regarding accuracy, missing details, or citation quality..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="feedbackSubmitBtn">Submit Feedback</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN F: ANALYTICS -->
+        <!-- =================================================================== -->
+        <section id="analyticsSection" class="content-section">
+            <div class="section-header">
+                <h2>Administrative Analytics</h2>
+                <p class="section-desc">Knowledge repository health, feedback aggregates, and role visibility simulations.</p>
+            </div>
+
+            <!-- Row 1: Document Ratings & Reindex Queue -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Feedback Ratings Grouped by Document</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Doc ID</th>
+                                    <th>Title</th>
+                                    <th>Reviews</th>
+                                    <th>Avg Rating</th>
+                                    <th>5-Star</th>
+                                    <th>Low (&le;2)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsFeedbackTbody">
+                                <tr><td colspan="6" class="text-center">Loading feedback analysis...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Documents Awaiting Re-indexing</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Doc ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Version</th>
+                                    <th>Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsReindexTbody">
+                                <tr><td colspan="5" class="text-center">Loading re-index queue...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Role Access Simulation (Admin Exclusive) -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h3>Role Access Policy Simulator (Admin Only)</h3>
+                    <div class="role-sim-controls">
+                        <label for="analyticsRoleSelect">Select Role to Test:</label>
+                        <select id="analyticsRoleSelect" class="form-select-sm">
+                            <option value="ROLE_EMPLOYEE">ROLE_EMPLOYEE</option>
+                            <option value="ROLE_HR">ROLE_HR</option>
+                            <option value="ROLE_ADMIN">ROLE_ADMIN</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" id="btnTestRoleAccess">Simulate Visibility</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted" style="margin-bottom: 1rem;">
+                        Executes SQL Query 5 to simulate which documents are legally visible to the selected role.
+                    </p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Access Level</th>
+                                <th>Version</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analyticsRoleAccessTbody">
+                            <tr><td colspan="5" class="text-center">Click 'Simulate Visibility' to run query.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: SOURCE PREVIEW (SCREEN E) -->
+    <!-- =================================================================== -->
+    <div id="sourcePreviewModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modalDocTitle">Document Source Preview</h3>
+                    <span class="modal-meta" id="modalMeta">Section 1 | Version 1</span>
+                </div>
+                <button class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-chunk-box">
+                    <pre id="modalChunkContent" class="preview-text">Loading passage content...</pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="clearance-tag" id="modalClearanceTag">Verified Clearance</span>
+                <button class="btn btn-secondary" id="modalDismissBtn">Close Preview</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>

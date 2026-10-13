@@ -1,0 +1,837 @@
+/**
+ * Enterprise Knowledge Portal - Vanilla JavaScript Application
+ * Handles authentication persona switching, REST API communication,
+ * document management, search, and the AI research agent workflow.
+ */
+
+// Application State
+const AppState = {
+    currentUser: {
+        username: 'employee1',
+        fullName: 'Alice Employee',
+        role: 'ROLE_EMPLOYEE'
+    },
+    activeSection: 'dashboardSection',
+    accessibleDocuments: []
+};
+
+// DOM Ready Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
+    initAuthSwitcher();
+    initDashboard();
+    initSearch();
+    initAiAgent();
+    initDocumentManagement();
+    initFeedback();
+    initAnalytics();
+    initModal();
+
+    // Initial Login as employee1
+    loginPersona('employee1', 'password123');
+});
+
+// ===================================================================
+// Authentication & Persona Switching
+// ===================================================================
+function initAuthSwitcher() {
+    const select = document.getElementById('demoUserSelect');
+    if (select) {
+        select.addEventListener('change', (e) => {
+            const username = e.target.value;
+            loginPersona(username, 'password123');
+        });
+    }
+}
+
+async function loginPersona(username, password) {
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            AppState.currentUser = data;
+            updateUserBadge(data);
+            showAlert(`Switched session to ${data.fullName} (${data.role})`, 'info');
+
+            // Refresh current active section data
+            refreshActiveSection();
+        } else {
+            showAlert('Failed to switch persona credentials.', 'danger');
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        showAlert('Could not communicate with authentication service.', 'danger');
+    }
+}
+
+function updateUserBadge(user) {
+    const nameEl = document.getElementById('userName');
+    const roleEl = document.getElementById('userRole');
+    const avatarEl = document.getElementById('userAvatar');
+
+    if (nameEl) nameEl.textContent = user.fullName;
+    if (roleEl) roleEl.textContent = user.role;
+    if (avatarEl) avatarEl.textContent = user.fullName.charAt(0);
+}
+
+// ===================================================================
+// Navigation Tabs
+// ===================================================================
+function initNavigation() {
+    const tabs = document.querySelectorAll('.nav-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.getAttribute('data-target');
+            switchTab(targetId);
+        });
+    });
+}
+
+function switchTab(sectionId) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+
+    const activeTab = document.querySelector(`.nav-tab[data-target="${sectionId}"]`);
+    const activeSection = document.getElementById(sectionId);
+
+    if (activeTab) activeTab.classList.add('active');
+    if (activeSection) activeSection.classList.add('active');
+
+    AppState.activeSection = sectionId;
+    refreshActiveSection();
+}
+
+function refreshActiveSection() {
+    switch (AppState.activeSection) {
+        case 'dashboardSection':
+            loadDashboardData();
+            break;
+        case 'documentsSection':
+            loadDocumentsTable();
+            break;
+        case 'feedbackSection':
+            populateFeedbackDocOptions();
+            break;
+        case 'analyticsSection':
+            loadAnalyticsData();
+            break;
+    }
+}
+
+// ===================================================================
+// Notification Banner Helper
+// ===================================================================
+function showAlert(message, type = 'info') {
+    const banner = document.getElementById('alertBanner');
+    const textEl = document.getElementById('alertMessage');
+    const closeBtn = document.getElementById('alertCloseBtn');
+
+    if (!banner || !textEl) return;
+
+    banner.className = `alert-banner alert-${type}`;
+    textEl.textContent = message;
+    banner.style.display = 'flex';
+
+    closeBtn.onclick = () => {
+        banner.style.display = 'none';
+    };
+
+    setTimeout(() => {
+        if (banner.style.display !== 'none') {
+            banner.style.display = 'none';
+        }
+    }, 5000);
+}
+
+// ===================================================================
+// SCREEN A: DASHBOARD
+// ===================================================================
+function initDashboard() {
+    loadDashboardData();
+}
+
+async function loadDashboardData() {
+    try {
+        const res = await fetch('/api/knowledge/analytics');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update KPIs
+        document.getElementById('kpiActiveDocs').textContent = data.totalActiveDocuments || 0;
+        document.getElementById('kpiArchivedDocs').textContent = data.totalArchivedDocuments || 0;
+        document.getElementById('kpiAwaitingReindex').textContent = data.totalAwaitingReindex || 0;
+        document.getElementById('kpiAvgRating').textContent = (data.overallAverageRating || 0).toFixed(1);
+
+        // Populate Category Table
+        const catTbody = document.getElementById('dashboardCategoryTbody');
+        if (catTbody) {
+            if (!data.documentsByCategoryAndStatus || data.documentsByCategoryAndStatus.length === 0) {
+                catTbody.innerHTML = '<tr><td colspan="3" class="text-center">No documents in knowledge base yet.</td></tr>';
+            } else {
+                catTbody.innerHTML = data.documentsByCategoryAndStatus.map(item => `
+                    <tr>
+                        <td><strong>${escapeHtml(item.category)}</strong></td>
+                        <td><span class="badge ${item.status === 'ACTIVE' ? 'badge-active' : 'badge-archived'}">${escapeHtml(item.status)}</span></td>
+                        <td>${item.count}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Populate Search Table
+        const searchTbody = document.getElementById('dashboardSearchTbody');
+        if (searchTbody) {
+            if (!data.frequentlySearchedCategories || data.frequentlySearchedCategories.length === 0) {
+                searchTbody.innerHTML = '<tr><td colspan="3" class="text-center">No search inquiries recorded yet.</td></tr>';
+            } else {
+                searchTbody.innerHTML = data.frequentlySearchedCategories.map(item => `
+                    <tr>
+                        <td>${escapeHtml(item.category)}</td>
+                        <td>${item.searchCount}</td>
+                        <td>${item.avgResults}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load dashboard:', err);
+    }
+}
+
+// ===================================================================
+// SCREEN B: KNOWLEDGE SEARCH
+// ===================================================================
+function initSearch() {
+    const form = document.getElementById('searchForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('searchInput').value.trim();
+            const category = document.getElementById('searchCategorySelect').value || null;
+            const status = document.getElementById('searchStatusSelect').value || 'ACTIVE';
+
+            if (!query) return;
+
+            const loading = document.getElementById('searchLoading');
+            const resultsList = document.getElementById('searchResultsList');
+            const metaBar = document.getElementById('searchMetaBar');
+            const countText = document.getElementById('searchResultCountText');
+
+            loading.style.display = 'block';
+            resultsList.innerHTML = '';
+            metaBar.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/knowledge/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, category, status })
+                });
+
+                loading.style.display = 'none';
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    showAlert(err.message || 'Search inquiry failed.', 'danger');
+                    return;
+                }
+
+                const data = await res.json();
+                metaBar.style.display = 'block';
+                countText.textContent = `${data.totalResults} matching passages found for query "${escapeHtml(data.query)}"`;
+
+                if (data.results.length === 0) {
+                    resultsList.innerHTML = `
+                        <div class="card" style="padding: 2rem; text-align: center;">
+                            <p style="font-size: 1.1rem; color: var(--text-secondary);">No matching passages found within your authorized clearance level.</p>
+                            <span class="text-muted" style="font-size: 0.85rem;">Try different keywords or check if you have clearance for higher classification documents.</span>
+                        </div>
+                    `;
+                } else {
+                    resultsList.innerHTML = data.results.map(item => `
+                        <div class="search-result-card">
+                            <div class="search-result-header">
+                                <span class="search-result-title">${escapeHtml(item.title)}</span>
+                                <span class="badge badge-mode">Score: ${item.score.toFixed(1)}</span>
+                            </div>
+                            <div class="search-result-meta">
+                                <span><strong>Category:</strong> ${escapeHtml(item.category)}</span>
+                                <span><strong>Version:</strong> v${item.version}</span>
+                                <span><strong>Section:</strong> ${escapeHtml(item.sectionReference || 'Section ' + item.chunkIndex)}</span>
+                                ${item.pageNumber ? `<span><strong>Page:</strong> ${item.pageNumber}</span>` : ''}
+                            </div>
+                            <div class="search-snippet">${escapeHtml(item.snippet)}</div>
+                            <div style="margin-top: 0.75rem; text-align: right;">
+                                <button class="btn btn-secondary btn-sm" onclick="openSourcePreview(${item.documentId}, ${item.chunkId})">
+                                    🔍 View Full Passage
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                console.error('Search error:', err);
+                showAlert('Failed to connect to search service.', 'danger');
+            }
+        });
+    }
+}
+
+// ===================================================================
+// SCREEN C: AI RESEARCH AGENT Q&A
+// ===================================================================
+function initAiAgent() {
+    const form = document.getElementById('aiAskForm');
+    const chips = document.querySelectorAll('.btn-chip');
+    const questionInput = document.getElementById('aiQuestionInput');
+    const quickFeedbackBtn = document.getElementById('btnQuickFeedback');
+
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const query = chip.getAttribute('data-query');
+            if (questionInput) questionInput.value = query;
+        });
+    });
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            const loading = document.getElementById('aiLoading');
+            const container = document.getElementById('aiResponseContainer');
+
+            loading.style.display = 'block';
+            container.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/knowledge/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+
+                loading.style.display = 'none';
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    showAlert(err.message || 'AI Agent request failed.', 'danger');
+                    return;
+                }
+
+                const data = await res.json();
+                renderAiResponse(data);
+                container.style.display = 'block';
+
+            } catch (err) {
+                loading.style.display = 'none';
+                console.error('AI Ask error:', err);
+                showAlert('Failed to contact AI Agent service.', 'danger');
+            }
+        });
+    }
+
+    if (quickFeedbackBtn) {
+        quickFeedbackBtn.addEventListener('click', () => {
+            switchTab('feedbackSection');
+            const qInput = document.getElementById('feedbackQuestion');
+            if (qInput && questionInput) qInput.value = questionInput.value;
+        });
+    }
+}
+
+function renderAiResponse(data) {
+    const answerEl = document.getElementById('aiAnswerContent');
+    const modeBadge = document.getElementById('aiModeBadge');
+    const abstainedBadge = document.getElementById('aiAbstainedBadge');
+    const reasoningNotesEl = document.getElementById('aiReasoningNotes');
+    const citationsGrid = document.getElementById('citationsGrid');
+    const citationCountEl = document.getElementById('citationCount');
+
+    // Answer Text
+    answerEl.textContent = data.answer;
+
+    // Mode Badge
+    modeBadge.textContent = data.mode;
+    if (data.mode === 'REAL_AI') {
+        modeBadge.className = 'badge badge-success';
+    } else if (data.mode === 'SIMULATION_FALLBACK') {
+        modeBadge.className = 'badge badge-admin';
+    } else {
+        modeBadge.className = 'badge badge-mode';
+    }
+
+    // Abstention Badge
+    if (data.abstained) {
+        abstainedBadge.style.display = 'inline-block';
+        abstainedBadge.className = 'badge badge-admin';
+        abstainedBadge.textContent = 'ABSTAINED';
+    } else {
+        abstainedBadge.style.display = 'inline-block';
+        abstainedBadge.className = 'badge badge-success';
+        abstainedBadge.textContent = 'VERIFIED EVIDENCE';
+    }
+
+    // Reasoning Notes
+    reasoningNotesEl.textContent = data.reasoningNotes || 'Workflow completed.';
+
+    // Citations
+    citationCountEl.textContent = (data.sources || []).length;
+
+    if (!data.sources || data.sources.length === 0) {
+        citationsGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; padding: 1rem; color: var(--text-muted); font-size: 0.88rem;">
+                No source citations returned. The agent refrained from generating unsupported claims.
+            </div>
+        `;
+    } else {
+        citationsGrid.innerHTML = data.sources.map(src => `
+            <div class="citation-card">
+                <div class="citation-header">
+                    <span>${escapeHtml(src.documentTitle)} (v${src.documentVersion})</span>
+                    <span>${escapeHtml(src.sectionReference || 'Chunk ' + src.chunkIndex)}</span>
+                </div>
+                <div class="citation-excerpt">${escapeHtml(src.excerpt)}</div>
+                <div style="margin-top: 0.5rem; text-align: right;">
+                    <button class="btn btn-secondary btn-sm" onclick="openSourcePreviewByDocAndChunk(${src.documentId}, ${src.chunkIndex})">
+                        Preview Source
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+// ===================================================================
+// SCREEN D: DOCUMENT MANAGEMENT
+// ===================================================================
+function initDocumentManagement() {
+    const uploadForm = document.getElementById('documentUploadForm');
+    const refreshBtn = document.getElementById('btnRefreshDocs');
+    const catFilter = document.getElementById('docListCategoryFilter');
+    const statusFilter = document.getElementById('docListStatusFilter');
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('uploadTitle').value.trim();
+            const description = document.getElementById('uploadDescription').value.trim();
+            const category = document.getElementById('uploadCategory').value;
+            const accessLevel = document.getElementById('uploadAccessLevel').value;
+            const fileInput = document.getElementById('uploadFile');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('Please select a file to upload.', 'danger');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('category', category);
+            formData.append('accessLevel', accessLevel);
+            formData.append('file', fileInput.files[0]);
+
+            const submitBtn = document.getElementById('uploadSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Uploading & Indexing...</span>';
+
+            try {
+                const res = await fetch('/api/knowledge/documents', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Upload and Index Document</span>';
+
+                if (res.ok) {
+                    const doc = await res.json();
+                    showAlert(`Document '${doc.title}' uploaded and indexed into ${doc.chunkCount} chunks!`, 'success');
+                    uploadForm.reset();
+                    loadDocumentsTable();
+                } else {
+                    const err = await res.json();
+                    showAlert(err.message || 'Document upload rejected.', 'danger');
+                }
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Upload and Index Document</span>';
+                console.error('Upload error:', err);
+                showAlert('Error connecting to upload endpoint.', 'danger');
+            }
+        });
+    }
+
+    if (refreshBtn) refreshBtn.addEventListener('click', loadDocumentsTable);
+    if (catFilter) catFilter.addEventListener('change', loadDocumentsTable);
+    if (statusFilter) statusFilter.addEventListener('change', loadDocumentsTable);
+}
+
+async function loadDocumentsTable() {
+    const catFilter = document.getElementById('docListCategoryFilter')?.value || '';
+    const statusFilter = document.getElementById('docListStatusFilter')?.value || 'ACTIVE';
+    const tbody = document.getElementById('documentsTableTbody');
+
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Loading accessible documents...</td></tr>';
+
+    let url = `/api/knowledge/documents?status=${statusFilter}`;
+    if (catFilter) url += `&category=${catFilter}`;
+
+    try {
+        const res = await fetch(url);
+        if (!res.ok) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">Failed to load documents.</td></tr>';
+            return;
+        }
+
+        const documents = await res.json();
+        AppState.accessibleDocuments = documents;
+
+        if (documents.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No documents found matching the filter criteria.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = documents.map(doc => {
+            const accessBadgeClass = `badge-${doc.accessLevel.toLowerCase()}`;
+            const statusBadgeClass = doc.status === 'ACTIVE' ? 'badge-active' : 'badge-archived';
+            const dateStr = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : '-';
+
+            return `
+                <tr>
+                    <td><strong>#${doc.id}</strong></td>
+                    <td>${escapeHtml(doc.title)}</td>
+                    <td>${escapeHtml(doc.category)}</td>
+                    <td><span class="badge ${accessBadgeClass}">${escapeHtml(doc.accessLevel)}</span></td>
+                    <td>v${doc.version}</td>
+                    <td><span class="badge ${statusBadgeClass}">${escapeHtml(doc.status)}</span></td>
+                    <td>${doc.chunkCount}</td>
+                    <td>${dateStr}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewDocumentDetails(${doc.id})">Details</button>
+                            ${doc.status === 'ACTIVE' ? `
+                                <button class="btn btn-secondary btn-sm" onclick="reindexDocument(${doc.id})">Re-index</button>
+                                <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="archiveDocument(${doc.id})">Archive</button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('Load documents error:', err);
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading documents.</td></tr>';
+    }
+}
+
+async function viewDocumentDetails(id) {
+    try {
+        const res = await fetch(`/api/knowledge/documents/${id}`);
+        if (!res.ok) {
+            const err = await res.json();
+            showAlert(err.message || 'Cannot view document details.', 'danger');
+            return;
+        }
+        const data = await res.json();
+        const doc = data.document;
+        const chunks = data.chunks;
+
+        let content = `Title: ${doc.title}\nCategory: ${doc.category}\nAccess Clearance: ${doc.accessLevel}\nVersion: ${doc.version}\nStatus: ${doc.status}\nOwner: ${doc.owner}\n\n`;
+        content += `Indexed Passages (${chunks.length}):\n`;
+        chunks.forEach(c => {
+            content += `\n--- [Chunk ${c.chunkIndex}: ${c.sectionReference || 'Section ' + c.chunkIndex}] ---\n${c.content}\n`;
+        });
+
+        openModal(doc.title, `Version ${doc.version} | ${chunks.length} Chunks`, content, doc.accessLevel);
+    } catch (err) {
+        console.error('View doc details error:', err);
+    }
+}
+
+async function reindexDocument(id) {
+    if (!confirm(`Are you sure you want to re-index document #${id}? This will bump the document version and regenerate active chunks.`)) {
+        return;
+    }
+    try {
+        const res = await fetch(`/api/knowledge/documents/${id}/reindex`, { method: 'PUT' });
+        if (res.ok) {
+            const updated = await res.json();
+            showAlert(`Document #${id} successfully re-indexed to version ${updated.version}!`, 'success');
+            loadDocumentsTable();
+        } else {
+            const err = await res.json();
+            showAlert(err.message || 'Failed to re-index document.', 'danger');
+        }
+    } catch (err) {
+        console.error('Reindex error:', err);
+    }
+}
+
+async function archiveDocument(id) {
+    if (!confirm(`Are you sure you want to safely archive document #${id}? Archived documents are excluded from search and Q&A.`)) {
+        return;
+    }
+    try {
+        const res = await fetch(`/api/knowledge/documents/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showAlert(`Document #${id} has been safely archived.`, 'success');
+            loadDocumentsTable();
+        } else {
+            const err = await res.json();
+            showAlert(err.message || 'Failed to archive document.', 'danger');
+        }
+    } catch (err) {
+        console.error('Archive error:', err);
+    }
+}
+
+// ===================================================================
+// SCREEN E: SOURCE PREVIEW MODAL
+// ===================================================================
+function initModal() {
+    const modal = document.getElementById('sourcePreviewModal');
+    const closeBtn = document.getElementById('modalCloseBtn');
+    const dismissBtn = document.getElementById('modalDismissBtn');
+
+    const closeModal = () => { if (modal) modal.style.display = 'none'; };
+    if (closeBtn) closeBtn.onclick = closeModal;
+    if (dismissBtn) dismissBtn.onclick = closeModal;
+}
+
+function openModal(title, meta, text, clearance) {
+    const modal = document.getElementById('sourcePreviewModal');
+    document.getElementById('modalDocTitle').textContent = title;
+    document.getElementById('modalMeta').textContent = meta;
+    document.getElementById('modalChunkContent').textContent = text;
+    document.getElementById('modalClearanceTag').textContent = `Clearance: ${clearance || 'AUTHORIZED'}`;
+    if (modal) modal.style.display = 'flex';
+}
+
+async function openSourcePreview(documentId, chunkId) {
+    try {
+        const res = await fetch(`/api/knowledge/documents/${documentId}/chunks/${chunkId}`);
+        if (!res.ok) {
+            const err = await res.json();
+            showAlert(err.message || 'Clearance check failed. You cannot preview this source.', 'danger');
+            return;
+        }
+        const chunk = await res.json();
+        openModal(
+            `Source Preview (Document #${documentId})`,
+            `${chunk.sectionReference || 'Chunk ' + chunk.chunkIndex} | Version ${chunk.documentVersion}`,
+            chunk.content,
+            'Verified Access'
+        );
+    } catch (err) {
+        console.error('Preview error:', err);
+    }
+}
+
+async function openSourcePreviewByDocAndChunk(documentId, chunkIndex) {
+    try {
+        const res = await fetch(`/api/knowledge/documents/${documentId}`);
+        if (!res.ok) {
+            const err = await res.json();
+            showAlert(err.message || 'Access restricted.', 'danger');
+            return;
+        }
+        const data = await res.json();
+        const chunk = data.chunks.find(c => c.chunkIndex === chunkIndex) || data.chunks[0];
+        if (chunk) {
+            openSourcePreview(documentId, chunk.id);
+        }
+    } catch (err) {
+        console.error('Preview error:', err);
+    }
+}
+
+// ===================================================================
+// SCREEN F: FEEDBACK
+// ===================================================================
+function initFeedback() {
+    const starBtns = document.querySelectorAll('.star-btn');
+    const ratingInput = document.getElementById('feedbackRatingValue');
+    const form = document.getElementById('feedbackForm');
+
+    starBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = parseInt(btn.getAttribute('data-value'), 10);
+            if (ratingInput) ratingInput.value = val;
+            starBtns.forEach(b => {
+                const bVal = parseInt(b.getAttribute('data-value'), 10);
+                b.classList.toggle('active', bVal <= val);
+            });
+        });
+    });
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const documentId = parseInt(document.getElementById('feedbackDocSelect').value, 10);
+            const question = document.getElementById('feedbackQuestion').value.trim();
+            const answerReference = document.getElementById('feedbackAnswerRef').value.trim();
+            const rating = parseInt(ratingInput.value, 10);
+            const comment = document.getElementById('feedbackComment').value.trim();
+
+            if (!documentId) {
+                showAlert('Please select the referenced document.', 'danger');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/knowledge/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documentId, question, answerReference, rating, comment })
+                });
+
+                if (res.ok) {
+                    const fb = await res.json();
+                    showAlert(fb.message || 'Feedback recorded successfully!', 'success');
+                    form.reset();
+                    ratingInput.value = 5;
+                    starBtns.forEach(b => b.classList.add('active'));
+                } else {
+                    const err = await res.json();
+                    showAlert(err.message || 'Feedback submission rejected.', 'danger');
+                }
+            } catch (err) {
+                console.error('Feedback submit error:', err);
+                showAlert('Could not communicate with feedback service.', 'danger');
+            }
+        });
+    }
+}
+
+async function populateFeedbackDocOptions() {
+    const select = document.getElementById('feedbackDocSelect');
+    if (!select) return;
+
+    try {
+        const res = await fetch('/api/knowledge/documents?status=ACTIVE');
+        if (!res.ok) return;
+        const docs = await res.json();
+        select.innerHTML = '<option value="">Select an accessible document...</option>' +
+            docs.map(d => `<option value="${d.id}">#${d.id} - ${escapeHtml(d.title)} (${d.accessLevel})</option>`).join('');
+    } catch (err) {
+        console.error('Failed to populate doc options:', err);
+    }
+}
+
+// ===================================================================
+// SCREEN G: ANALYTICS
+// ===================================================================
+function initAnalytics() {
+    const roleSimBtn = document.getElementById('btnTestRoleAccess');
+    if (roleSimBtn) {
+        roleSimBtn.addEventListener('click', runRoleAccessSimulation);
+    }
+}
+
+async function loadAnalyticsData() {
+    try {
+        const res = await fetch('/api/knowledge/analytics');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // 1. Feedback ratings grouped by document
+        const fbTbody = document.getElementById('analyticsFeedbackTbody');
+        if (fbTbody) {
+            if (!data.feedbackRatingsByDocument || data.feedbackRatingsByDocument.length === 0) {
+                fbTbody.innerHTML = '<tr><td colspan="6" class="text-center">No feedback ratings recorded yet.</td></tr>';
+            } else {
+                fbTbody.innerHTML = data.feedbackRatingsByDocument.map(item => `
+                    <tr>
+                        <td>#${item.documentId}</td>
+                        <td>${escapeHtml(item.title)}</td>
+                        <td>${item.feedbackCount}</td>
+                        <td><strong>⭐ ${item.averageRating.toFixed(1)}</strong></td>
+                        <td>${item.fiveStarCount}</td>
+                        <td>${item.lowRatingCount}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // 2. Documents awaiting re-indexing
+        const reindexTbody = document.getElementById('analyticsReindexTbody');
+        if (reindexTbody) {
+            if (!data.documentsAwaitingReindex || data.documentsAwaitingReindex.length === 0) {
+                reindexTbody.innerHTML = '<tr><td colspan="5" class="text-center">All documents are currently up-to-date.</td></tr>';
+            } else {
+                reindexTbody.innerHTML = data.documentsAwaitingReindex.map(item => `
+                    <tr>
+                        <td>#${item.id}</td>
+                        <td>${escapeHtml(item.title)}</td>
+                        <td>${escapeHtml(item.category)}</td>
+                        <td>v${item.version}</td>
+                        <td>${new Date(item.updatedAt).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+    } catch (err) {
+        console.error('Load analytics error:', err);
+    }
+}
+
+async function runRoleAccessSimulation() {
+    const role = document.getElementById('analyticsRoleSelect')?.value || 'ROLE_EMPLOYEE';
+    const tbody = document.getElementById('analyticsRoleAccessTbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Simulating role access policy...</td></tr>';
+
+    try {
+        const res = await fetch(`/api/knowledge/analytics/role-access?role=${role}`);
+        if (!res.ok) {
+            const err = await res.json();
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color: var(--danger);">${escapeHtml(err.message || 'Access restricted to administrators.')}</td></tr>`;
+            return;
+        }
+
+        const docs = await res.json();
+        if (docs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No documents visible to this role.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = docs.map(d => `
+            <tr>
+                <td>#${d.id}</td>
+                <td>${escapeHtml(d.title)}</td>
+                <td>${escapeHtml(d.category)}</td>
+                <td><span class="badge badge-${d.accessLevel.toLowerCase()}">${escapeHtml(d.accessLevel)}</span></td>
+                <td>v${d.version}</td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        console.error('Role sim error:', err);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Error simulating role access.</td></tr>';
+    }
+}
+
+// Utility: HTML escaping to prevent XSS
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}

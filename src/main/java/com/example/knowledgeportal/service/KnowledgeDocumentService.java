@@ -229,6 +229,22 @@ public class KnowledgeDocumentService {
         return new DocumentResponse(archived, count);
     }
 
+    /**
+     * Retrieves a single chunk preview after validating document access clearance.
+     */
+    @Transactional(readOnly = true)
+    public ChunkResponse getChunkPreview(Long documentId, Long chunkId, Authentication auth) {
+        KnowledgeDocument document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID: " + documentId));
+
+        permissionService.validateDocumentAccess(auth, document);
+
+        KnowledgeChunk chunk = chunkRepository.findByIdAndDocumentId(chunkId, documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chunk not found with ID " + chunkId + " for document ID " + documentId));
+
+        return new ChunkResponse(chunk);
+    }
+
     private String storeFileToDisk(MultipartFile file) {
         try {
             Path uploadPath = Paths.get(uploadDirectory).toAbsolutePath().normalize();

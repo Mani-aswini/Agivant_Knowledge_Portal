@@ -75,6 +75,19 @@ public class KnowledgeDocumentController {
     }
 
     /**
+     * Source preview: Retrieve an individual chunk's content with authorization check.
+     */
+    @GetMapping("/{id}/chunks/{chunkId}")
+    public ResponseEntity<com.example.knowledgeportal.dto.ChunkResponse> getChunkPreview(
+            @PathVariable("id") Long id,
+            @PathVariable("chunkId") Long chunkId,
+            Authentication authentication) {
+
+        com.example.knowledgeportal.dto.ChunkResponse response = documentService.getChunkPreview(id, chunkId, authentication);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Re-index an existing document.
      */
     @PutMapping("/{id}/reindex")

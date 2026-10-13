@@ -12,75 +12,226 @@
 </head>
 <body>
 
-    <!-- Header & Top Navigation -->
-    <header class="app-header">
-        <div class="header-container">
-            <div class="brand">
-                <div class="brand-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- =================================================================== -->
+    <!-- DEDICATED AUTHENTICATION PORTAL (VISIBLE WHEN LOGGED OUT) -->
+    <!-- =================================================================== -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="brand-icon auth-brand-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                     </svg>
                 </div>
-                <div class="brand-text">
-                    <h1>Enterprise Knowledge Portal</h1>
-                    <span class="brand-subtitle">AI Research Agent & Knowledge Base</span>
+                <h2>Enterprise Knowledge Portal</h2>
+                <p class="auth-subtitle">Role-Based Access Control &amp; AI Research Gateway</p>
+            </div>
+
+            <!-- Auth Error / Notification Banner -->
+            <div id="authAlert" class="auth-alert" style="display: none;">
+                <span id="authAlertText"></span>
+            </div>
+
+            <!-- Three Authentication Mode Tabs -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" data-auth-view="employeeLoginView" id="tabEmpLogin">
+                    👤 Employee Login
+                </button>
+                <button type="button" class="auth-tab-btn" data-auth-view="employeeRegisterView" id="tabEmpRegister">
+                    📝 Employee Register
+                </button>
+                <button type="button" class="auth-tab-btn" data-auth-view="adminLoginView" id="tabAdminLogin">
+                    🛡️ Admin Login
+                </button>
+            </div>
+
+            <!-- TAB 1: EMPLOYEE LOGIN -->
+            <div id="employeeLoginView" class="auth-view active">
+                <div class="auth-view-header">
+                    <h3>Employee Portal Sign-In</h3>
+                    <p>Access authorized corporate policies, run semantic search, and consult the AI Research Agent.</p>
+                </div>
+                <form id="formEmployeeLogin" class="auth-form">
+                    <div class="form-group">
+                        <label for="empLoginUser">Username</label>
+                        <input type="text" id="empLoginUser" class="form-input" placeholder="e.g. employee1" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="empLoginPass">Password</label>
+                        <input type="password" id="empLoginPass" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnEmpLoginSubmit">
+                        Sign In as Employee
+                    </button>
+                </form>
+
+                <div class="auth-demo-hint">
+                    <span class="hint-title">💡 Demo Employee:</span>
+                    <button type="button" class="btn-demo-fill" id="btnFillEmpDemo">Fill `employee1` / `password123`</button>
+                </div>
+
+                <div class="auth-switch-prompt">
+                    <span>New team member?</span>
+                    <button type="button" class="btn-link" id="linkToRegister">Register for an employee account &rarr;</button>
                 </div>
             </div>
 
-            <!-- User Context / Role Switcher for Demonstration -->
-            <div class="user-auth-bar" id="userAuthBar">
-                <div class="user-badge" id="userBadge">
-                    <span class="user-avatar" id="userAvatar">A</span>
-                    <div class="user-info">
-                        <span class="user-name" id="userName">Alice Employee</span>
-                        <span class="user-role" id="userRole">ROLE_EMPLOYEE</span>
+            <!-- TAB 2: EMPLOYEE REGISTRATION -->
+            <div id="employeeRegisterView" class="auth-view">
+                <div class="auth-view-header">
+                    <h3>Employee Account Registration</h3>
+                    <p>Create a verified employee account to access company knowledge assets.</p>
+                </div>
+                <form id="formEmployeeRegister" class="auth-form">
+                    <div class="form-group">
+                        <label for="regFullName">Full Name *</label>
+                        <input type="text" id="regFullName" class="form-input" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regUsername">Work Username *</label>
+                        <input type="text" id="regUsername" class="form-input" placeholder="e.g. jdoe" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Password * (minimum 4 characters)</label>
+                        <input type="password" id="regPassword" class="form-input" placeholder="Create strong password" required autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="regConfirmPassword">Confirm Password *</label>
+                        <input type="password" id="regConfirmPassword" class="form-input" placeholder="Re-enter password" required autocomplete="new-password">
+                    </div>
+
+                    <div class="clearance-assignment-badge">
+                        <span class="badge-icon">🏷️</span>
+                        <div>
+                            <strong>Assigned Clearance: ROLE_EMPLOYEE</strong>
+                            <p>Granted access to General Company Policies, FAQs, and AI Research.</p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnRegisterSubmit">
+                        Create Employee Account &amp; Sign In
+                    </button>
+                </form>
+
+                <div class="auth-switch-prompt">
+                    <span>Already registered?</span>
+                    <button type="button" class="btn-link" id="linkToEmpLogin">&larr; Return to Employee Sign-In</button>
+                </div>
+            </div>
+
+            <!-- TAB 3: ADMIN LOGIN -->
+            <div id="adminLoginView" class="auth-view">
+                <div class="auth-view-header admin-header">
+                    <span class="admin-badge-icon">🛡️</span>
+                    <div>
+                        <h3>Portal Administrator Gateway</h3>
+                        <p>Restricted access for document ingestion, permission management, and system analytics.</p>
                     </div>
                 </div>
-                <div class="role-switcher">
-                    <label for="demoUserSelect">Switch Persona:</label>
-                    <select id="demoUserSelect" class="form-select-sm">
-                        <option value="employee1">Alice (Employee)</option>
-                        <option value="hr_user">Helen (HR Manager)</option>
-                        <option value="admin_user">Arthur (Admin)</option>
-                    </select>
+
+                <div class="admin-warning-banner">
+                    ⚠️ <strong>Restricted Access:</strong> Only accounts with <code>ROLE_ADMIN</code> clearance can access this gateway. Regular employee accounts will be rejected.
+                </div>
+
+                <form id="formAdminLogin" class="auth-form">
+                    <div class="form-group">
+                        <label for="adminLoginUser">Administrator Username</label>
+                        <input type="text" id="adminLoginUser" class="form-input" placeholder="e.g. admin_user" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminLoginPass">Administrator Password</label>
+                        <input type="password" id="adminLoginPass" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-admin btn-block btn-lg" id="btnAdminLoginSubmit">
+                        Sign In as Administrator
+                    </button>
+                </form>
+
+                <div class="auth-demo-hint">
+                    <span class="hint-title">🔒 Demo Admin:</span>
+                    <button type="button" class="btn-demo-fill admin-fill" id="btnFillAdminDemo">Fill `admin_user` / `password123`</button>
                 </div>
             </div>
         </div>
-
-        <!-- Section Navigation Tabs -->
-        <nav class="nav-tabs" aria-label="Main Navigation">
-            <div class="nav-container">
-                <button class="nav-tab active" data-target="dashboardSection" id="tabDashboard">
-                    <span class="tab-icon">📊</span> Dashboard
-                </button>
-                <button class="nav-tab" data-target="searchSection" id="tabSearch">
-                    <span class="tab-icon">🔍</span> Knowledge Search
-                </button>
-                <button class="nav-tab" data-target="aiAgentSection" id="tabAiAgent">
-                    <span class="tab-icon">🤖</span> AI Research Agent
-                </button>
-                <button class="nav-tab" data-target="documentsSection" id="tabDocuments">
-                    <span class="tab-icon">📁</span> Document Management
-                </button>
-                <button class="nav-tab" data-target="feedbackSection" id="tabFeedback">
-                    <span class="tab-icon">⭐</span> Feedback
-                </button>
-                <button class="nav-tab" data-target="analyticsSection" id="tabAnalytics">
-                    <span class="tab-icon">📈</span> Analytics
-                </button>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Global Notification Banner -->
-    <div id="alertBanner" class="alert-banner" style="display: none;">
-        <span id="alertMessage"></span>
-        <button class="alert-close" id="alertCloseBtn">&times;</button>
     </div>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
+    <!-- =================================================================== -->
+    <!-- AUTHENTICATED PORTAL APPLICATION (SHOWN AFTER SUCCESSFUL LOGIN) -->
+    <!-- =================================================================== -->
+    <div id="appContainer" style="display: none;">
+
+        <!-- Header & Top Navigation -->
+        <header class="app-header">
+            <div class="header-container">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Enterprise Knowledge Portal</h1>
+                        <span class="brand-subtitle">AI Research Agent &amp; Knowledge Base</span>
+                    </div>
+                </div>
+
+                <!-- User Context & Role Badge -->
+                <div class="user-auth-bar" id="userAuthBar">
+                    <div class="user-badge" id="userBadge">
+                        <span class="user-avatar" id="userAvatar">A</span>
+                        <div class="user-info">
+                            <span class="user-name" id="userName">Alice Employee</span>
+                            <div style="display: flex; align-items: center; gap: 0.35rem; margin-top: 2px;">
+                                <span class="badge badge-employee" id="userRoleBadge">ROLE_EMPLOYEE</span>
+                                <span class="user-clearance-pill" id="userClearancePill">Tier 1 Clearance</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-signout" id="btnLogout" title="Sign out of portal">
+                        <span>🚪</span> Sign Out
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section Navigation Tabs -->
+            <nav class="nav-tabs" aria-label="Main Navigation">
+                <div class="nav-container">
+                    <button class="nav-tab active" data-target="dashboardSection" id="tabDashboard">
+                        <span class="tab-icon">📊</span> Dashboard
+                    </button>
+                    <button class="nav-tab" data-target="searchSection" id="tabSearch">
+                        <span class="tab-icon">🔍</span> Knowledge Search
+                    </button>
+                    <button class="nav-tab" data-target="aiAgentSection" id="tabAiAgent">
+                        <span class="tab-icon">🤖</span> AI Research Agent
+                    </button>
+                    <button class="nav-tab" data-target="documentsSection" id="tabDocuments">
+                        <span class="tab-icon">📁</span> <span id="tabDocumentsLabel">Document Management</span>
+                    </button>
+                    <button class="nav-tab" data-target="feedbackSection" id="tabFeedback">
+                        <span class="tab-icon">⭐</span> Feedback
+                    </button>
+                    <button class="nav-tab" data-target="analyticsSection" id="tabAnalytics">
+                        <span class="tab-icon">📈</span> Analytics
+                    </button>
+                    <button class="nav-tab" data-target="usersSection" id="tabUsers" style="display: none;">
+                        <span class="tab-icon">👥</span> User Directory
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Global Notification Banner -->
+        <div id="alertBanner" class="alert-banner" style="display: none;">
+            <span id="alertMessage"></span>
+            <button class="alert-close" id="alertCloseBtn">&times;</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
 
         <!-- =================================================================== -->
         <!-- SCREEN A: DASHBOARD -->
@@ -373,10 +524,23 @@
                 <p class="section-desc">Upload, segment, re-index, and safely archive approved enterprise documents.</p>
             </div>
 
-            <!-- Upload Document Accordion/Card -->
-            <div class="card upload-card">
+            <!-- Employee Read-Only Clearance Notice -->
+            <div class="card employee-readonly-card" id="employeeReadonlyNotice" style="display: none;">
+                <div class="card-body" style="display: flex; align-items: center; gap: 1.25rem; background: #f8fafc; padding: 1.25rem;">
+                    <span style="font-size: 2.2rem; flex-shrink: 0;">📚</span>
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; color: var(--primary);">Enterprise Document Library (Employee Access)</h4>
+                        <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+                            You have verified employee clearance to browse, filter, and inspect all approved company policies and guidelines. Document uploading, segmentation ingestion, and archival are restricted to Portal Administrators.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Document Accordion/Card (Admin Only) -->
+            <div class="card upload-card" id="documentUploadCard">
                 <div class="card-header">
-                    <h3>Upload New Document</h3>
+                    <h3>Upload New Document (Admin Ingestion)</h3>
                 </div>
                 <div class="card-body">
                     <form id="documentUploadForm" class="upload-form" enctype="multipart/form-data">
@@ -611,7 +775,44 @@
             </div>
         </section>
 
+        <!-- =================================================================== -->
+        <!-- SCREEN G: USERS DIRECTORY (ADMIN ONLY) -->
+        <!-- =================================================================== -->
+        <section id="usersSection" class="content-section">
+            <div class="section-header">
+                <h2>User Accounts &amp; Access Clearance Directory</h2>
+                <p class="section-desc">Manage registered employee accounts and view enterprise clearance levels.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header doc-table-header">
+                    <h3>Registered Portal Accounts</h3>
+                    <button class="btn btn-secondary btn-sm" id="btnRefreshUsers">🔄 Refresh Directory</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Full Name</th>
+                                    <th>Username</th>
+                                    <th>Assigned Role</th>
+                                    <th>Clearance Scope</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableTbody">
+                                <tr><td colspan="6" class="text-center">Loading user accounts...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
+    </div> <!-- End appContainer -->
 
     <!-- =================================================================== -->
     <!-- MODAL: SOURCE PREVIEW (SCREEN E) -->

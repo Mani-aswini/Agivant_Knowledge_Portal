@@ -1,16 +1,12 @@
 /**
  * Enterprise Knowledge Portal - Vanilla JavaScript Application
- * Handles authentication persona switching, REST API communication,
- * document management, search, and the AI research agent workflow.
+ * Handles authentication, role-based functionality access, document management,
+ * semantic search, and the AI research agent workflow.
  */
 
 // Application State
 const AppState = {
-    currentUser: {
-        username: 'employee1',
-        fullName: 'Alice Employee',
-        role: 'ROLE_EMPLOYEE'
-    },
+    currentUser: null,
     activeSection: 'dashboardSection',
     accessibleDocuments: []
 };
@@ -18,65 +14,358 @@ const AppState = {
 // DOM Ready Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
-    initAuthSwitcher();
+    initAuthPortal();
     initDashboard();
     initSearch();
     initAiAgent();
     initDocumentManagement();
     initFeedback();
     initAnalytics();
+    initUsersDirectory();
     initModal();
 
-    // Initial Login as employee1
-    loginPersona('employee1', 'password123');
+    // Check if user has an existing active session, or display Auth Portal
+    checkSessionOrShowAuth();
 });
 
 // ===================================================================
-// Authentication & Persona Switching
+// Authentication & Role-Based Access Control
 // ===================================================================
-function initAuthSwitcher() {
-    const select = document.getElementById('demoUserSelect');
-    if (select) {
-        select.addEventListener('change', (e) => {
-            const username = e.target.value;
-            loginPersona(username, 'password123');
+function initAuthPortal() {
+    // Tab switching in Auth Gateway
+    const authTabBtns = document.querySelectorAll('.auth-tab-btn');
+    authTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetViewId = btn.getAttribute('data-auth-view');
+            switchAuthTab(targetViewId);
+        });
+    });
+
+    // Quick links between forms
+    const linkToRegister = document.getElementById('linkToRegister');
+    if (linkToRegister) {
+        linkToRegister.addEventListener('click', () => switchAuthTab('employeeRegisterView'));
+    }
+
+    const linkToEmpLogin = document.getElementById('linkToEmpLogin');
+    if (linkToEmpLogin) {
+        linkToEmpLogin.addEventListener('click', () => switchAuthTab('employeeLoginView'));
+    }
+
+    // Demo credentials auto-fill buttons
+    const btnFillEmpDemo = document.getElementById('btnFillEmpDemo');
+    if (btnFillEmpDemo) {
+        btnFillEmpDemo.addEventListener('click', () => {
+            const userIn = document.getElementById('empLoginUser');
+            const passIn = document.getElementById('empLoginPass');
+            if (userIn) userIn.value = 'employee1';
+            if (passIn) passIn.value = 'password123';
+        });
+    }
+
+    const btnFillAdminDemo = document.getElementById('btnFillAdminDemo');
+    if (btnFillAdminDemo) {
+        btnFillAdminDemo.addEventListener('click', () => {
+            const userIn = document.getElementById('adminLoginUser');
+            const passIn = document.getElementById('adminLoginPass');
+            if (userIn) userIn.value = 'admin_user';
+            if (passIn) passIn.value = 'password123';
+        });
+    }
+
+    // 1. Employee Login Form
+    const formEmpLogin = document.getElementById('formEmployeeLogin');
+    if (formEmpLogin) {
+        formEmpLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAuthAlert();
+
+            const username = document.getElementById('empLoginUser').value.trim();
+            const password = document.getElementById('empLoginPass').value;
+            const submitBtn = document.getElementById('btnEmpLoginSubmit');
+
+            if (!username || !password) {
+                showAuthAlert('Please enter both username and password.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying Credentials...';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In as Employee';
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showAuthAlert(err.message || 'Invalid username or password. Please try again.');
+                    return;
+                }
+
+                const user = await res.json();
+                onLoginSuccess(user, true);
+
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In as Employee';
+                console.error('Employee Login error:', err);
+                showAuthAlert('Unable to communicate with the authentication server.');
+            }
+        });
+    }
+
+    // 2. Employee Registration Form
+    const formEmpRegister = document.getElementById('formEmployeeRegister');
+    if (formEmpRegister) {
+        formEmpRegister.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAuthAlert();
+
+            const fullName = document.getElementById('regFullName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const submitBtn = document.getElementById('btnRegisterSubmit');
+
+            if (password !== confirmPassword) {
+                showAuthAlert('Passwords do not match. Please re-enter identical passwords.');
+                return;
+            }
+
+            if (password.length < 4) {
+                showAuthAlert('Password must be at least 4 characters long.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, username, password })
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Employee Account & Sign In';
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showAuthAlert(err.message || 'Registration failed. The username may already exist.');
+                    return;
+                }
+
+                const user = await res.json();
+                formEmpRegister.reset();
+                onLoginSuccess(user, true);
+                showAlert(`🎉 Account created! Welcome to the Knowledge Portal, ${user.fullName}.`, 'success');
+
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Employee Account & Sign In';
+                console.error('Registration error:', err);
+                showAuthAlert('Registration request could not be processed.');
+            }
+        });
+    }
+
+    // 3. Administrator Login Form (Strict Admin Gateway)
+    const formAdminLogin = document.getElementById('formAdminLogin');
+    if (formAdminLogin) {
+        formAdminLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAuthAlert();
+
+            const username = document.getElementById('adminLoginUser').value.trim();
+            const password = document.getElementById('adminLoginPass').value;
+            const submitBtn = document.getElementById('btnAdminLoginSubmit');
+
+            if (!username || !password) {
+                showAuthAlert('Please enter administrator username and password.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Authenticating Admin Security Clearance...';
+
+            try {
+                const res = await fetch('/api/auth/admin-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In as Administrator';
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    if (res.status === 403) {
+                        showAuthAlert(`🛑 Access Denied: ${err.message || 'Account does not have administrator clearance.'}`);
+                    } else {
+                        showAuthAlert(err.message || 'Invalid administrator credentials.');
+                    }
+                    return;
+                }
+
+                const user = await res.json();
+                onLoginSuccess(user, true);
+
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In as Administrator';
+                console.error('Admin Login error:', err);
+                showAuthAlert('Admin gateway could not connect to security service.');
+            }
+        });
+    }
+
+    // Sign Out Action
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (e) {}
+            AppState.currentUser = null;
+            showAuthScreen();
+            showAlert('You have been securely signed out.', 'info');
         });
     }
 }
 
-async function loginPersona(username, password) {
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            AppState.currentUser = data;
-            updateUserBadge(data);
-            showAlert(`Switched session to ${data.fullName} (${data.role})`, 'info');
-
-            // Refresh current active section data
-            refreshActiveSection();
+function switchAuthTab(targetViewId) {
+    clearAuthAlert();
+    document.querySelectorAll('.auth-tab-btn').forEach(b => {
+        if (b.getAttribute('data-auth-view') === targetViewId) {
+            b.classList.add('active');
         } else {
-            showAlert('Failed to switch persona credentials.', 'danger');
+            b.classList.remove('active');
         }
-    } catch (err) {
-        console.error('Login error:', err);
-        showAlert('Could not communicate with authentication service.', 'danger');
+    });
+
+    document.querySelectorAll('.auth-view').forEach(v => {
+        if (v.id === targetViewId) {
+            v.classList.add('active');
+        } else {
+            v.classList.remove('active');
+        }
+    });
+}
+
+function showAuthAlert(msg) {
+    const alertBox = document.getElementById('authAlert');
+    const alertText = document.getElementById('authAlertText');
+    if (alertBox && alertText) {
+        alertText.textContent = msg;
+        alertBox.style.display = 'block';
     }
 }
 
-function updateUserBadge(user) {
+function clearAuthAlert() {
+    const alertBox = document.getElementById('authAlert');
+    if (alertBox) alertBox.style.display = 'none';
+}
+
+async function checkSessionOrShowAuth() {
+    try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+            const user = await res.json();
+            onLoginSuccess(user, false);
+            return;
+        }
+    } catch (e) {}
+    showAuthScreen();
+}
+
+function showAuthScreen() {
+    const authScreen = document.getElementById('authScreen');
+    const appContainer = document.getElementById('appContainer');
+    if (authScreen) authScreen.style.display = 'flex';
+    if (appContainer) appContainer.style.display = 'none';
+    clearAuthAlert();
+}
+
+function showAppScreen() {
+    const authScreen = document.getElementById('authScreen');
+    const appContainer = document.getElementById('appContainer');
+    if (authScreen) authScreen.style.display = 'none';
+    if (appContainer) appContainer.style.display = 'block';
+}
+
+function onLoginSuccess(user, notify = true) {
+    AppState.currentUser = user;
+    applyUserPermissions(user);
+    showAppScreen();
+
+    if (notify) {
+        const roleLabel = user.role === 'ROLE_ADMIN' ? 'Portal Administrator' : 'Staff Employee';
+        showAlert(`Signed in as ${user.fullName} (${roleLabel}). Clearance active.`, 'success');
+    }
+
+    // Default to dashboard
+    switchTab('dashboardSection');
+    refreshActiveSection();
+}
+
+function applyUserPermissions(user) {
+    if (!user) return;
+    const isAdmin = user.role === 'ROLE_ADMIN';
+
+    // 1. Header Profile Badge
     const nameEl = document.getElementById('userName');
-    const roleEl = document.getElementById('userRole');
+    const roleBadgeEl = document.getElementById('userRoleBadge');
     const avatarEl = document.getElementById('userAvatar');
+    const clearancePill = document.getElementById('userClearancePill');
 
     if (nameEl) nameEl.textContent = user.fullName;
-    if (roleEl) roleEl.textContent = user.role;
-    if (avatarEl) avatarEl.textContent = user.fullName.charAt(0);
+    if (avatarEl) avatarEl.textContent = user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U';
+
+    if (roleBadgeEl) {
+        roleBadgeEl.textContent = isAdmin ? 'ADMINISTRATOR' : 'EMPLOYEE';
+        roleBadgeEl.className = isAdmin ? 'badge badge-admin' : 'badge badge-employee';
+    }
+
+    if (clearancePill) {
+        clearancePill.textContent = isAdmin
+            ? 'Clearance: Tier 3 (Full Admin)'
+            : 'Clearance: Tier 1 (Public + Employee)';
+    }
+
+    // 2. Navigation Tab Visibility & Titles
+    const tabAnalytics = document.getElementById('tabAnalytics');
+    if (tabAnalytics) {
+        tabAnalytics.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+
+    const tabUsers = document.getElementById('tabUsers');
+    if (tabUsers) {
+        tabUsers.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+
+    const tabDocsLabel = document.getElementById('tabDocumentsLabel');
+    if (tabDocsLabel) {
+        tabDocsLabel.textContent = isAdmin ? 'Document Ingestion & Management' : 'Document Library';
+    }
+
+    // 3. Document Management Functionality Isolation
+    const uploadCard = document.getElementById('documentUploadCard');
+    const employeeNotice = document.getElementById('employeeReadonlyNotice');
+
+    if (uploadCard) {
+        uploadCard.style.display = isAdmin ? 'block' : 'none';
+    }
+    if (employeeNotice) {
+        employeeNotice.style.display = isAdmin ? 'none' : 'block';
+    }
 }
 
 // ===================================================================
@@ -93,6 +382,12 @@ function initNavigation() {
 }
 
 function switchTab(sectionId) {
+    // Guard admin-only sections
+    if ((sectionId === 'analyticsSection' || sectionId === 'usersSection') && AppState.currentUser?.role !== 'ROLE_ADMIN') {
+        showAlert('Access Denied: This section requires Portal Administrator security clearance.', 'danger');
+        return;
+    }
+
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
 
@@ -120,8 +415,12 @@ function refreshActiveSection() {
         case 'analyticsSection':
             loadAnalyticsData();
             break;
+        case 'usersSection':
+            loadUsersDirectory();
+            break;
     }
 }
+
 
 // ===================================================================
 // Notification Banner Helper
@@ -783,7 +1082,7 @@ async function loadDocumentsTable() {
                     <td>
                         <div style="display: flex; gap: 0.35rem;">
                             <button class="btn btn-secondary btn-sm" onclick="viewDocumentDetails(${doc.id})">Details</button>
-                            ${doc.status === 'ACTIVE' ? `
+                            ${(AppState.currentUser?.role === 'ROLE_ADMIN' && doc.status === 'ACTIVE') ? `
                                 <button class="btn btn-secondary btn-sm" onclick="reindexDocument(${doc.id})">Re-index</button>
                                 <button class="btn btn-secondary btn-sm" style="color: var(--danger);" onclick="archiveDocument(${doc.id})">Archive</button>
                             ` : ''}
@@ -1085,6 +1384,60 @@ async function runRoleAccessSimulation() {
     } catch (err) {
         console.error('Role sim error:', err);
         tbody.innerHTML = '<tr><td colspan="5" class="text-center">Error simulating role access.</td></tr>';
+    }
+}
+
+// ===================================================================
+// SCREEN G: USERS DIRECTORY (ADMIN ONLY)
+// ===================================================================
+function initUsersDirectory() {
+    const refreshBtn = document.getElementById('btnRefreshUsers');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadUsersDirectory);
+    }
+}
+
+async function loadUsersDirectory() {
+    const tbody = document.getElementById('usersTableTbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading registered user accounts...</td></tr>';
+
+    try {
+        const res = await fetch('/api/auth/users');
+        if (!res.ok) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Access Restricted: Only Administrators can inspect the user directory.</td></tr>';
+            return;
+        }
+
+        const users = await res.json();
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No user accounts found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(u => {
+            const isAdm = u.role === 'ROLE_ADMIN';
+            const roleBadgeClass = isAdm ? 'badge-admin' : 'badge-employee';
+            const scopeText = isAdm
+                ? 'Tier 3: Public, Employee, HR, Admin (Unrestricted)'
+                : 'Tier 1: Public, Employee (Approved Corporate Policies)';
+
+            return `
+                <tr>
+                    <td><strong>#${u.id}</strong></td>
+                    <td><strong>${escapeHtml(u.fullName)}</strong></td>
+                    <td><code>${escapeHtml(u.username)}</code></td>
+                    <td><span class="badge ${roleBadgeClass}">${escapeHtml(u.role)}</span></td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">${scopeText}</td>
+                    <td><span class="badge badge-active">Active</span></td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('Load users directory error:', err);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load user directory.</td></tr>';
     }
 }
 

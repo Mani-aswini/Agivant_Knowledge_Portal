@@ -286,11 +286,222 @@ function initSearch() {
 // ===================================================================
 // SCREEN C: AI RESEARCH AGENT Q&A
 // ===================================================================
+let currentAiResponseData = null;
+
+function switchAiSubView(targetSubViewId) {
+    document.querySelectorAll('.ai-view-tab').forEach(tab => {
+        if (tab.getAttribute('data-subview') === targetSubViewId) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+
+    document.querySelectorAll('.ai-subview').forEach(view => {
+        if (view.id === targetSubViewId) {
+            view.classList.add('active');
+        } else {
+            view.classList.remove('active');
+        }
+    });
+}
+
+function extractKeywords(query) {
+    if (!query) return [];
+    const stopWords = new Set([
+        'what', 'when', 'where', 'which', 'who', 'whom', 'whose', 'why', 'how',
+        'tell', 'about', 'please', 'give', 'show', 'explain', 'describe', 'find',
+        'this', 'that', 'these', 'those', 'with', 'from', 'into', 'during', 'including',
+        'until', 'against', 'among', 'throughout', 'despite', 'towards', 'upon', 'concerning',
+        'have', 'been', 'were', 'will', 'would', 'could', 'should', 'does', 'done'
+    ]);
+    return query.toLowerCase()
+        .replace(/[^a-zA-Z0-9\s-]/g, ' ')
+        .split(/\s+/)
+        .map(w => w.trim())
+        .filter(w => w.length >= 3 && !stopWords.has(w));
+}
+
+function highlightKeywordsInText(escapedText, keywords) {
+    if (!escapedText || !keywords || keywords.length === 0) return escapedText;
+    let result = escapedText;
+    for (const kw of keywords) {
+        if (kw.length < 3) continue;
+        const regex = new RegExp(`(?<![a-zA-Z0-9])(${kw})(?![a-zA-Z0-9])`, 'gi');
+        result = result.replace(regex, '<span class="answer-highlight">$1</span>');
+    }
+    return result;
+}
+
+function sanitizePassageText(text) {
+    if (!text) return '';
+    return text
+        .replace(/\.{3,}/g, ' ')
+        .replace(/Page\s+\d+\s+of\s+\d+/gi, '')
+        .replace(/Table of Contents/gi, '')
+        .replace(/Spec-Driven Development Workflow — Internal Documentation/gi, '')
+        .replace(/[-_]{3,}/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function formatSectionReference(rawRef) {
+    if (!rawRef || rawRef.trim() === '' || rawRef.startsWith('Chunk')) {
+        return 'General Overview';
+    }
+    let clean = rawRef.trim();
+    // Strip trailing punctuation
+    clean = clean.replace(/[\.\s:;,-]+$/, '');
+    if (clean.includes('--') || clean.startsWith('OR ') || clean.length > 45) {
+        if (clean.length > 45) {
+            clean = clean.substring(0, 42) + '...';
+        }
+    }
+    return clean;
+}
+
+function formatRichAiAnswer(answerText, keywords) {
+    if (!answerText) return '<p class="text-muted">No response content generated.</p>';
+
+    const rawLines = answerText.split('\n');
+    let html = '';
+    let inStepList = false;
+
+    for (let i = 0; i < rawLines.length; i++) {
+        let line = rawLines[i].trim();
+        if (!line) {
+            if (inStepList) {
+                html += '</div>';
+                inStepList = false;
+            }
+            continue;
+        }
+
+        // Clean out noisy dot trails
+        line = line.replace(/\.{3,}/g, '');
+
+        // Check if line is a document citation header
+        const docHeaderMatch = line.match(/^(?:(?:\d+[\.\)])\s+)?According to ['"]?([^'":]+)['"]?:?$/i);
+        if (docHeaderMatch) {
+            if (inStepList) {
+                html += '</div>';
+                inStepList = false;
+            }
+            const docName = docHeaderMatch[1].trim();
+            html += `
+                <div class="answer-doc-header">
+                    <span>📄 Document Source: <strong>${escapeHtml(docName)}</strong></span>
+                </div>
+            `;
+            continue;
+        }
+
+        // Check for multi-doc synthesis announcement
+        if (line.toLowerCase().startsWith('synthesizing information across')) {
+            if (inStepList) {
+                html += '</div>';
+                inStepList = false;
+            }
+            html += `
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    🌐 ${escapeHtml(line)}
+                </div>
+            `;
+            continue;
+        }
+
+        // Check for numbered steps or bullet items
+        const stepMatch = line.match(/^(?:[•\-\*]\s*)?(?:Step\s*(\d+)[:\s—\-]+|(\d+)[\.\)]\s+)(.*)$/i);
+        const bulletMatch = line.match(/^[•\-\*]\s+(.*)$/);
+
+        if (stepMatch) {
+            if (!inStepList) {
+                html += '<div class="answer-step-list">';
+                inStepList = true;
+            }
+            const stepNum = stepMatch[1] || stepMatch[2];
+            const stepBody = stepMatch[3] ? stepMatch[3].trim() : '';
+            const highlightedBody = highlightKeywordsInText(escapeHtml(stepBody), keywords);
+
+            html += `
+                <div class="answer-step-item">
+                    <span class="step-num-badge">${stepNum}</span>
+                    <div class="step-content">${highlightedBody}</div>
+                </div>
+            `;
+        } else if (bulletMatch) {
+            if (inStepList) {
+                html += '</div>';
+                inStepList = false;
+            }
+            const bulletBody = bulletMatch[1].trim();
+            const highlightedBody = highlightKeywordsInText(escapeHtml(bulletBody), keywords);
+
+            html += `
+                <div class="answer-bullet-item">
+                    ${highlightedBody}
+                </div>
+            `;
+        } else {
+            if (inStepList) {
+                html += '</div>';
+                inStepList = false;
+            }
+            const highlightedText = highlightKeywordsInText(escapeHtml(line), keywords);
+            html += `<p style="margin-bottom: 0.75rem;">${highlightedText}</p>`;
+        }
+    }
+
+    if (inStepList) {
+        html += '</div>';
+    }
+
+    return html;
+}
+
 function initAiAgent() {
     const form = document.getElementById('aiAskForm');
     const chips = document.querySelectorAll('.btn-chip');
     const questionInput = document.getElementById('aiQuestionInput');
     const quickFeedbackBtn = document.getElementById('btnQuickFeedback');
+    const copyAnswerBtn = document.getElementById('btnCopyAnswer');
+    const inspectEvidenceBtn = document.getElementById('btnInspectEvidence');
+
+    // Sub-view tab switching
+    document.querySelectorAll('.ai-view-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const subview = tab.getAttribute('data-subview');
+            if (subview) switchAiSubView(subview);
+        });
+    });
+
+    if (inspectEvidenceBtn) {
+        inspectEvidenceBtn.addEventListener('click', () => {
+            switchAiSubView('evidenceView');
+        });
+    }
+
+    if (copyAnswerBtn) {
+        copyAnswerBtn.addEventListener('click', async () => {
+            if (!currentAiResponseData || !currentAiResponseData.answer) return;
+            try {
+                await navigator.clipboard.writeText(currentAiResponseData.answer);
+                const originalHtml = copyAnswerBtn.innerHTML;
+                copyAnswerBtn.innerHTML = '✅ Copied to Clipboard!';
+                setTimeout(() => {
+                    copyAnswerBtn.innerHTML = originalHtml;
+                }, 2000);
+            } catch (err) {
+                const textarea = document.createElement('textarea');
+                textarea.value = currentAiResponseData.answer;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showAlert('Answer copied to clipboard!', 'success');
+            }
+        });
+    }
 
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
@@ -327,8 +538,12 @@ function initAiAgent() {
                 }
 
                 const data = await res.json();
-                renderAiResponse(data);
+                currentAiResponseData = data;
+                renderAiResponse(data, question);
+                switchAiSubView('answerView');
                 container.style.display = 'block';
+
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             } catch (err) {
                 loading.style.display = 'none';
@@ -347,16 +562,38 @@ function initAiAgent() {
     }
 }
 
-function renderAiResponse(data) {
+function renderAiResponse(data, query) {
     const answerEl = document.getElementById('aiAnswerContent');
     const modeBadge = document.getElementById('aiModeBadge');
     const abstainedBadge = document.getElementById('aiAbstainedBadge');
     const reasoningNotesEl = document.getElementById('aiReasoningNotes');
     const citationsGrid = document.getElementById('citationsGrid');
-    const citationCountEl = document.getElementById('citationCount');
+    const citationCountBadge = document.getElementById('citationCountBadge');
+    const evidenceTabCountEl = document.getElementById('evidenceTabCount');
+    const subtitleEl = document.getElementById('responseQuestionSubtitle');
 
-    // Answer Text
-    answerEl.textContent = data.answer;
+    const effectiveQuery = data.question || query || '';
+    const keywords = extractKeywords(effectiveQuery);
+
+    // Subtitle
+    if (subtitleEl) {
+        subtitleEl.textContent = effectiveQuery ? `Query: "${effectiveQuery}"` : '';
+    }
+
+    // Answer Rendering
+    if (data.abstained) {
+        answerEl.innerHTML = `
+            <div class="abstention-notice">
+                <div class="notice-icon">🛑</div>
+                <div class="notice-content">
+                    <h4>Direct Answer Abstained (Integrity Guardrail)</h4>
+                    <p>${escapeHtml(data.answer)}</p>
+                </div>
+            </div>
+        `;
+    } else {
+        answerEl.innerHTML = formatRichAiAnswer(data.answer, keywords);
+    }
 
     // Mode Badge
     modeBadge.textContent = data.mode;
@@ -380,32 +617,58 @@ function renderAiResponse(data) {
     }
 
     // Reasoning Notes
-    reasoningNotesEl.textContent = data.reasoningNotes || 'Workflow completed.';
+    if (reasoningNotesEl) {
+        reasoningNotesEl.textContent = data.reasoningNotes || 'Workflow completed.';
+    }
 
-    // Citations
-    citationCountEl.textContent = (data.sources || []).length;
+    // Citations Count
+    const srcCount = (data.sources || []).length;
+    if (citationCountBadge) {
+        citationCountBadge.textContent = `${srcCount} Sources Cited`;
+    }
+    if (evidenceTabCountEl) {
+        evidenceTabCountEl.textContent = srcCount;
+    }
 
+    // Render Evidence Cards
     if (!data.sources || data.sources.length === 0) {
         citationsGrid.innerHTML = `
-            <div style="grid-column: 1 / -1; padding: 1rem; color: var(--text-muted); font-size: 0.88rem;">
-                No source citations returned. The agent refrained from generating unsupported claims.
+            <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); background: #f8fafc; border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔒</div>
+                <strong style="font-size: 1rem; color: var(--text-secondary);">No source citations attached.</strong>
+                <p style="font-size: 0.88rem; margin: 0.35rem 0 0 0;">
+                    ${data.abstained ? 'The agent strictly refrained from generating unverified claims without approved document backing.' : 'No matching passages met the relevance threshold for this inquiry.'}
+                </p>
             </div>
         `;
     } else {
-        citationsGrid.innerHTML = data.sources.map(src => `
-            <div class="citation-card">
-                <div class="citation-header">
-                    <span>${escapeHtml(src.documentTitle)} (v${src.documentVersion})</span>
-                    <span>${escapeHtml(src.sectionReference || 'Chunk ' + src.chunkIndex)}</span>
+        citationsGrid.innerHTML = data.sources.map(src => {
+            const cleanExcerpt = sanitizePassageText(src.excerpt);
+            const highlightedExcerpt = highlightKeywordsInText(escapeHtml(cleanExcerpt), keywords);
+            const sectionRef = formatSectionReference(src.sectionReference);
+
+            return `
+                <div class="evidence-passage-card">
+                    <div class="evidence-card-header">
+                        <div class="evidence-title-group">
+                            <span class="evidence-doc-title">📄 ${escapeHtml(src.documentTitle)}</span>
+                            <span class="badge badge-employee" style="font-size: 0.75rem;">v${src.documentVersion}</span>
+                            <span class="evidence-section-pill">📍 ${escapeHtml(sectionRef)}</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openSourcePreviewByDocAndChunk(${src.documentId}, ${src.chunkIndex})">
+                            🔍 Inspect Full Chunk
+                        </button>
+                    </div>
+                    <div class="evidence-quote-box">
+                        "${highlightedExcerpt}"
+                    </div>
+                    <div class="evidence-card-footer">
+                        <span>Chunk #${src.chunkIndex} in MySQL Repository</span>
+                        <span class="badge-verified">✓ Access Clearance Verified</span>
+                    </div>
                 </div>
-                <div class="citation-excerpt">${escapeHtml(src.excerpt)}</div>
-                <div style="margin-top: 0.5rem; text-align: right;">
-                    <button class="btn btn-secondary btn-sm" onclick="openSourcePreviewByDocAndChunk(${src.documentId}, ${src.chunkIndex})">
-                        Preview Source
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 }
 

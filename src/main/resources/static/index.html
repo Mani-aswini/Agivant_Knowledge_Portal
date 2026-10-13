@@ -251,45 +251,115 @@
                 <p>Agent executing tool workflow: searching authorized documents, retrieving passages, and validating citations...</p>
             </div>
 
-            <!-- Agent Response Container -->
+            <!-- Agent Response Container (Redesigned & Organized) -->
             <div id="aiResponseContainer" class="ai-response-container" style="display: none;">
                 <div class="card response-card">
+                    <!-- Top Status & Mode Bar -->
                     <div class="response-header">
                         <div class="response-title">
-                            <span class="ai-avatar">🤖</span>
-                            <h3>Agent Generated Answer</h3>
+                            <span class="ai-avatar-pulse">🤖</span>
+                            <div>
+                                <h3 id="responseCardTitle">AI Research Findings</h3>
+                                <span class="response-question-subtitle" id="responseQuestionSubtitle"></span>
+                            </div>
                         </div>
                         <div class="response-badges">
                             <span id="aiModeBadge" class="badge badge-mode">SIMULATION</span>
-                            <span id="aiAbstainedBadge" class="badge badge-success" style="display: none;">ANSWERED</span>
+                            <span id="aiAbstainedBadge" class="badge badge-success">VERIFIED EVIDENCE</span>
+                            <span id="citationCountBadge" class="badge badge-pill">0 Sources</span>
                         </div>
                     </div>
 
-                    <div class="response-body">
-                        <div id="aiAnswerContent" class="ai-answer-text">
-                            <!-- Answer injected here -->
+                    <!-- Sub-tabs for switching between Answer, Evidence Sources, and Security Audit -->
+                    <div class="ai-view-tabs">
+                        <button type="button" class="ai-view-tab active" data-subview="answerView" id="tabViewAnswer">
+                            ✨ Direct Answer &amp; Key Points
+                        </button>
+                        <button type="button" class="ai-view-tab" data-subview="evidenceView" id="tabViewEvidence">
+                            📚 Verified Evidence Passages (<span id="evidenceTabCount">0</span>)
+                        </button>
+                        <button type="button" class="ai-view-tab" data-subview="auditView" id="tabViewAudit">
+                            🛡️ Security &amp; Workflow Audit
+                        </button>
+                    </div>
+
+                    <!-- SUB-VIEW 1: Synthesized Direct Answer -->
+                    <div id="answerView" class="ai-subview active">
+                        <div class="answer-banner">
+                            <div class="answer-banner-icon">💡</div>
+                            <div class="answer-banner-text">
+                                <strong>Synthesized Response</strong>
+                                <span>Based strictly on verified enterprise documentation accessible to your clearance level.</span>
+                            </div>
                         </div>
 
-                        <!-- Reasoning / Guardrail Notes -->
-                        <div class="reasoning-box" id="aiReasoningBox">
-                            <strong>Agent Execution Log:</strong>
-                            <span id="aiReasoningNotes">Retrieved evidence validated against authorized clearance.</span>
+                        <!-- Rich Formatted Answer Body -->
+                        <div id="aiAnswerContent" class="ai-answer-rich">
+                            <!-- Injected structured HTML -->
+                        </div>
+
+                        <!-- Action Toolbar -->
+                        <div class="answer-action-toolbar">
+                            <div class="action-buttons-left">
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnCopyAnswer">
+                                    📋 Copy Answer
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnInspectEvidence">
+                                    🔍 View Supporting Passages
+                                </button>
+                            </div>
+                            <div class="action-buttons-right">
+                                <button type="button" class="btn btn-primary btn-sm" id="btnQuickFeedback">
+                                    ⭐ Submit Quality Rating
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Verified Citations Section -->
-                    <div class="citations-section" id="citationsSection">
-                        <h4>Verified Document Citations (<span id="citationCount">0</span>)</h4>
-                        <div class="citations-grid" id="citationsGrid">
-                            <!-- Citation cards injected here -->
+                    <!-- SUB-VIEW 2: Verified Evidence Passages -->
+                    <div id="evidenceView" class="ai-subview">
+                        <div class="evidence-intro-bar">
+                            <p>Below are the exact verbatim passages retrieved from your organization's approved documents that substantiate this answer:</p>
+                        </div>
+                        <div class="evidence-cards-stack" id="citationsGrid">
+                            <!-- Evidence passage cards injected here -->
                         </div>
                     </div>
 
-                    <!-- Quick Feedback Link -->
-                    <div class="response-footer">
-                        <span>Was this answer helpful?</span>
-                        <button class="btn btn-sm btn-secondary" id="btnQuickFeedback">Submit Feedback</button>
+                    <!-- SUB-VIEW 3: Security & Verification Audit -->
+                    <div id="auditView" class="ai-subview">
+                        <div class="audit-grid">
+                            <div class="audit-card">
+                                <div class="audit-icon success">🛡️</div>
+                                <div>
+                                    <h4>Access Clearance Isolation</h4>
+                                    <p id="auditClearanceText">Clearance validated in Java services. Restricted HR and ADMIN documents were isolated before retrieval.</p>
+                                </div>
+                            </div>
+                            <div class="audit-card">
+                                <div class="audit-icon success">🔒</div>
+                                <div>
+                                    <h4>Prompt-Injection Defense</h4>
+                                    <p>Uploaded passages treated as untrusted reference data. Malicious instruction overrides are scanned and defused.</p>
+                                </div>
+                            </div>
+                            <div class="audit-card">
+                                <div class="audit-icon success">📑</div>
+                                <div>
+                                    <h4>Citation Verifiability</h4>
+                                    <p>All citations cross-referenced with active document chunk IDs and versions in the MySQL repository.</p>
+                                </div>
+                            </div>
+                            <div class="audit-card">
+                                <div class="audit-icon info">⚙️</div>
+                                <div>
+                                    <h4>Execution Mode &amp; Orchestration</h4>
+                                    <p id="aiReasoningNotes">Prototype simulation mode: Deterministic extractive synthesis from retrieved passages.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </section>

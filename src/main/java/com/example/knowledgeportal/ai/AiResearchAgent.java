@@ -178,8 +178,12 @@ public class AiResearchAgent {
             String docTitle = entry.getKey();
             List<EvidenceChunk> chunks = entry.getValue();
 
-            answerBuilder.append("According to '").append(docTitle).append("', ");
             String relevantSentences = extractRelevantSentences(question, chunks);
+            if (relevantSentences.startsWith("•") || relevantSentences.contains("\n•")) {
+                answerBuilder.append("According to '").append(docTitle).append("':\n\n");
+            } else {
+                answerBuilder.append("According to '").append(docTitle).append("', ");
+            }
             answerBuilder.append(relevantSentences);
 
         } else {
@@ -191,7 +195,7 @@ public class AiResearchAgent {
                 String docTitle = entry.getKey();
                 List<EvidenceChunk> chunks = entry.getValue();
 
-                answerBuilder.append(docIndex++).append(". According to '").append(docTitle).append("': ");
+                answerBuilder.append(docIndex++).append(". According to '").append(docTitle).append("':\n");
                 String sentences = extractRelevantSentences(question, chunks);
                 answerBuilder.append(sentences).append("\n\n");
             }
@@ -212,14 +216,19 @@ public class AiResearchAgent {
         List<String> matchedSentences = new ArrayList<>();
 
         for (EvidenceChunk chunk : chunks) {
-            String[] sentences = chunk.getContent().split("(?<=[.!?])\\s+");
-            for (String sentence : sentences) {
-                String sentenceLower = sentence.toLowerCase();
+            // Split by both sentence terminators and clean newlines
+            String[] rawLines = chunk.getContent().split("(?<=[.!?])\\s+|\n+");
+            for (String line : rawLines) {
+                String cleanLine = line.trim();
+                if (isJunkOrTocLine(cleanLine)) {
+                    continue;
+                }
+
+                String lower = cleanLine.toLowerCase();
                 for (String word : searchWords) {
-                    if (sentenceLower.contains(word)) {
-                        String cleanSentence = sentence.trim();
-                        if (!matchedSentences.contains(cleanSentence)) {
-                            matchedSentences.add(cleanSentence);
+                    if (lower.contains(word)) {
+                        if (!matchedSentences.contains(cleanLine)) {
+                            matchedSentences.add(cleanLine);
                         }
                         break;
                     }
@@ -228,10 +237,54 @@ public class AiResearchAgent {
         }
 
         if (matchedSentences.isEmpty()) {
-            // Fallback: return the first chunk's text directly
-            return chunks.get(0).getContent().trim();
+            // Fallback: return the first non-junk sentence from the top chunk
+            String topContent = chunks.get(0).getContent();
+            for (String line : topContent.split("(?<=[.!?])\\s+|\n+")) {
+                String clean = line.trim();
+                if (!isJunkOrTocLine(clean) && clean.length() > 20) {
+                    return clean;
+                }
+            }
+            return topContent.trim();
+        }
+
+        // Format as clean structured points or continuous text
+        if (matchedSentences.size() > 1 && (question.toLowerCase().contains("step") || 
+            question.toLowerCase().contains("workflow") || question.toLowerCase().contains("how") ||
+            question.toLowerCase().contains("protocol") || question.toLowerCase().contains("rules"))) {
+            StringBuilder formatted = new StringBuilder();
+            for (String sentence : matchedSentences) {
+                if (formatted.length() > 0) {
+                    formatted.append("\n");
+                }
+                if (sentence.startsWith("•") || sentence.startsWith("-")) {
+                    formatted.append(sentence);
+                } else {
+                    formatted.append("• ").append(sentence);
+                }
+            }
+            return formatted.toString().trim();
         }
 
         return String.join(" ", matchedSentences);
+    }
+
+    private boolean isJunkOrTocLine(String line) {
+        if (line == null) {
+            return true;
+        }
+        String trimmed = line.trim();
+        if (trimmed.length() < 12) {
+            return true;
+        }
+        String lower = trimmed.toLowerCase();
+        return trimmed.contains("..") ||
+               lower.contains("table of contents") ||
+               lower.matches(".*page\\s+\\d+\\s+of\\s+\\d+.*") ||
+               lower.contains("internal documentation") ||
+               lower.matches("^[\\.\\-_=\\s]+$") ||
+               lower.matches(".*workflow\\s+checklist.*") ||
+               lower.matches("^step\\s+action.*") ||
+               lower.matches(".*\\.pdf$");
     }
 }

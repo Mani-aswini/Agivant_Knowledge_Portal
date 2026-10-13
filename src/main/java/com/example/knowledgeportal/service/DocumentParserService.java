@@ -148,10 +148,29 @@ public class DocumentParserService {
         if (text == null) {
             return "";
         }
-        // Normalize CRLF to LF, strip control characters, and trim excessive whitespace
-        return text.replace("\r\n", "\n")
-                   .replace("\r", "\n")
-                   .replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "")
-                   .trim();
+        // Normalize line breaks and remove non-printable control characters
+        String normalized = text.replace("\r\n", "\n")
+                                .replace("\r", "\n")
+                                .replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "");
+
+        // Remove table-of-contents dot trails (e.g. "................")
+        normalized = normalized.replaceAll("\\.{3,}", " ")
+                               // Remove page number markers like "Page 2 of 11"
+                               .replaceAll("(?i)Page\\s+\\d+\\s+of\\s+\\d+", "")
+                               // Remove repeated dashes or underline trails
+                               .replaceAll("_{3,}", " ")
+                               // Collapse excessive spaces and tabs on the same line
+                               .replaceAll("[ \\t]{2,}", " ");
+
+        // Remove lines that became purely whitespace or punctuation
+        StringBuilder sb = new StringBuilder();
+        for (String line : normalized.split("\n")) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty() && !trimmed.matches("^[\\.\\-_\\s]+$")) {
+                sb.append(trimmed).append("\n");
+            }
+        }
+
+        return sb.toString().trim();
     }
 }

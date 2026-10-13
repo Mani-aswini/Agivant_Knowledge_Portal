@@ -119,20 +119,29 @@ public class TextChunkerService {
     }
 
     private boolean isSectionHeading(String paragraph) {
-        if (paragraph.length() > 100) {
+        if (paragraph == null || paragraph.length() > 60 || paragraph.length() < 3) {
             return false;
         }
-        String lower = paragraph.toLowerCase();
+        // Avoid misclassifying command lines, flags, or bullet points as headings
+        if (paragraph.startsWith("--") || paragraph.startsWith("OR ") || paragraph.startsWith("•") ||
+            paragraph.contains("http") || paragraph.contains("...")) {
+            return false;
+        }
+
+        String lower = paragraph.toLowerCase().trim();
         return lower.startsWith("section ") ||
                lower.startsWith("chapter ") ||
                lower.startsWith("part ") ||
                lower.startsWith("# ") ||
                lower.startsWith("## ") ||
-               paragraph.matches("^[0-9]+(\\.[0-9]+)*\\s+.*");
+               paragraph.matches("^(?:[0-9]+\\.|[0-9]+\\.[0-9]+)\\s+[A-Z][a-zA-Z\\s]{2,40}$");
     }
 
     private String cleanHeading(String heading) {
-        return heading.replaceAll("^#+\\s*", "").trim();
+        String clean = heading.replaceAll("^#+\\s*", "")
+                              .replaceAll("[:\\.]+$", "")
+                              .trim();
+        return clean.length() > 50 ? clean.substring(0, 50).trim() : clean;
     }
 
     private String extractTrailingOverlap(String text, int overlapSize) {

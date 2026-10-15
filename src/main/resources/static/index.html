@@ -1666,13 +1666,13 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
                             <div class="form-group">
                                 <label for="newEmpUsername" class="form-label">Username <span class="text-danger">*</span></label>
-                                <input type="text" id="newEmpUsername" class="form-input" placeholder="e.g. rahul.sharma" required autocomplete="off">
-                                <span class="form-help-text">Lowercase alphanumeric (used to sign in)</span>
+                                <input type="text" id="newEmpUsername" class="form-input" placeholder="e.g. rahul.sharma" required autocomplete="off" minlength="3" maxlength="30" pattern="^[a-z][a-z0-9._]{2,29}$" title="Starts with a lowercase letter, only lowercase letters, digits, dots, or underscores (3-30 chars). Cannot be numbers only.">
+                                <span class="form-help-text">Lowercase only (e.g. rahul.sharma) &bull; No uppercase, spaces, or numbers-only</span>
                             </div>
                             <div class="form-group">
                                 <label for="newEmpPassword" class="form-label">Initial Password <span class="text-danger">*</span></label>
-                                <input type="text" id="newEmpPassword" class="form-input" placeholder="e.g. EmployeePass2026!" required autocomplete="new-password">
-                                <span class="form-help-text">Minimum 4 characters</span>
+                                <input type="text" id="newEmpPassword" class="form-input" placeholder="e.g. EmployeePass2026!" required autocomplete="new-password" minlength="6" maxlength="100" title="Minimum 6 characters with mixed letters and numbers or symbols">
+                                <span class="form-help-text">Min 6 characters with mixed letters & numbers/symbols</span>
                             </div>
                             <div class="form-group">
                                 <label for="newEmpRole" class="form-label">System Role <span class="text-danger">*</span></label>
@@ -1695,7 +1695,8 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
                             <div class="form-group">
                                 <label for="newEmpFullName" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" id="newEmpFullName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+                                <input type="text" id="newEmpFullName" class="form-input" placeholder="e.g. Rahul Sharma" required minlength="2" maxlength="100" pattern="^[a-zA-Z\s.'-]+$" title="Full Name must contain only alphabetic letters, spaces, and valid name characters (no numbers allowed).">
+                                <span class="form-help-text">Letters and spaces only &bull; Numbers not permitted</span>
                             </div>
                             <div class="form-group">
                                 <label for="newEmpEmail" class="form-label">Corporate Email</label>
@@ -1733,7 +1734,8 @@
                             </div>
                             <div class="form-group" style="grid-column: 1 / -1;">
                                 <label for="newEmpManager" class="form-label">Reporting Manager</label>
-                                <input type="text" id="newEmpManager" class="form-input" placeholder="e.g. Ashwin Mani">
+                                <input type="text" id="newEmpManager" class="form-input" placeholder="e.g. Ashwin Mani" maxlength="100" pattern="^[a-zA-Z\s.'-]*$" title="Reporting Manager must contain only letters and valid name characters (no numbers).">
+                                <span class="form-help-text">Letters only &bull; Numbers not permitted</span>
                             </div>
                         </div>
                     </div>

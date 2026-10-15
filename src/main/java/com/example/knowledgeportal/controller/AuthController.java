@@ -122,11 +122,41 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest,
                                       HttpServletRequest request) {
-        if (userAccountRepository.existsByUsername(registerRequest.getUsername().trim())) {
+        String username = registerRequest.getUsername() != null ? registerRequest.getUsername().trim().toLowerCase() : "";
+        if (!username.matches("^[a-z][a-z0-9._]{2,29}$")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Validation Failure",
+                    "Username must start with a lowercase letter and contain only lowercase letters, digits, dots or underscores (3-30 characters). Numbers-only or uppercase usernames are not allowed.",
+                    "/api/auth/register"
+            ));
+        }
+
+        String fullName = registerRequest.getFullName() != null ? registerRequest.getFullName().trim() : "";
+        if (fullName.matches(".*\\d.*") || !fullName.matches("^(?=.*[a-zA-Z].*[a-zA-Z])[a-zA-Z\\s.'-]+$")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Validation Failure",
+                    "Full Name must contain only alphabetic letters, spaces, and standard name characters (cannot be numbers or numeric only).",
+                    "/api/auth/register"
+            ));
+        }
+
+        String rawPassword = registerRequest.getPassword() != null ? registerRequest.getPassword().trim() : "";
+        if (rawPassword.length() < 6 || !rawPassword.matches(".*[a-zA-Z].*") || !rawPassword.matches(".*[0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Validation Failure",
+                    "Password must be at least 6 characters long and contain a mix of letters and numbers or symbols.",
+                    "/api/auth/register"
+            ));
+        }
+
+        if (userAccountRepository.existsByUsername(username)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
                     HttpStatus.CONFLICT.value(),
                     "Conflict",
-                    "Username '" + registerRequest.getUsername().trim() + "' is already registered. Please choose another username or sign in.",
+                    "Username '" + username + "' is already registered. Please choose another username or sign in.",
                     "/api/auth/register"
             ));
         }

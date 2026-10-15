@@ -58,9 +58,44 @@ public class EmployeeService {
     public EmployeeDetailResponse createEmployee(CreateEmployeeRequest req, Authentication auth) {
         permissionService.validateAdminOrHr(auth);
 
-        String username = req.getUsername().trim().toLowerCase();
+        String username = req.getUsername() != null ? req.getUsername().trim().toLowerCase() : "";
+        if (username.isBlank() || !username.matches("^[a-z][a-z0-9._]{2,29}$")) {
+            throw new IllegalArgumentException("Username must start with a lowercase letter and contain only lowercase letters, digits, dots, or underscores (3-30 characters). Numbers-only or uppercase usernames are not allowed.");
+        }
         if (userAccountRepository.existsByUsernameIgnoreCase(username) || profileRepository.findByUsernameIgnoreCase(username).isPresent()) {
             throw new IllegalStateException("Username '" + username + "' is already registered. Please choose another username.");
+        }
+
+        // Validate Full Name
+        String fullName = req.getFullName() != null ? req.getFullName().trim() : "";
+        if (fullName.isBlank()) {
+            throw new IllegalArgumentException("Full Name is required.");
+        }
+        if (fullName.matches(".*\\d.*")) {
+            throw new IllegalArgumentException("Full Name cannot contain numbers. Only alphabetic letters, spaces, and standard name characters are allowed.");
+        }
+        if (!fullName.matches("^(?=.*[a-zA-Z].*[a-zA-Z])[a-zA-Z\\s.'-]+$")) {
+            throw new IllegalArgumentException("Full Name must contain only alphabetic letters and valid name characters (cannot be numbers or numeric only).");
+        }
+
+        // Validate Password
+        String rawPassword = req.getPassword() != null ? req.getPassword().trim() : "";
+        if (rawPassword.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long.");
+        }
+        if (!rawPassword.matches(".*[a-zA-Z].*") || !rawPassword.matches(".*[0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+            throw new IllegalArgumentException("Password must contain a mix of letters and numbers or symbols.");
+        }
+
+        // Validate Reporting Manager (if provided)
+        if (req.getReportingManager() != null && !req.getReportingManager().isBlank()) {
+            String rm = req.getReportingManager().trim();
+            if (rm.matches(".*\\d.*")) {
+                throw new IllegalArgumentException("Reporting Manager cannot contain numbers. Only letters, spaces, and standard name characters are allowed.");
+            }
+            if (!rm.matches("^[a-zA-Z\\s.'-]+$")) {
+                throw new IllegalArgumentException("Reporting Manager must contain only alphabetic letters and valid name characters.");
+            }
         }
 
         // Generate or validate employee code

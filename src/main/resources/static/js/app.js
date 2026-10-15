@@ -4219,10 +4219,15 @@ function initAddEmployeeModal() {
         });
     }
 
-    if (usernameInput && emailInput) {
+    if (usernameInput) {
         usernameInput.addEventListener('input', () => {
-            if (!emailManuallyEdited) {
-                const cleanUser = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+            const orig = usernameInput.value;
+            const lower = orig.toLowerCase().replace(/\s+/g, '');
+            if (orig !== lower) {
+                usernameInput.value = lower;
+            }
+            if (!emailManuallyEdited && emailInput) {
+                const cleanUser = lower.trim().replace(/[^a-z0-9._-]/g, '');
                 if (cleanUser) {
                     emailInput.value = `${cleanUser}@company.internal`;
                 } else {
@@ -4238,7 +4243,7 @@ function initAddEmployeeModal() {
             const submitBtn = document.getElementById('btnAddEmpSubmit');
             const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Save';
 
-            const username = document.getElementById('newEmpUsername')?.value.trim().toLowerCase();
+            const username = document.getElementById('newEmpUsername')?.value.trim();
             const password = document.getElementById('newEmpPassword')?.value;
             const role = document.getElementById('newEmpRole')?.value || 'ROLE_EMPLOYEE';
             const fullName = document.getElementById('newEmpFullName')?.value.trim();
@@ -4255,9 +4260,67 @@ function initAddEmployeeModal() {
             const wfhAllowanceDays = parseInt(document.getElementById('newEmpWfh')?.value || '24', 10);
             const compOffBalance = parseInt(document.getElementById('newEmpCompOff')?.value || '0', 10);
 
+            // 1. Basic Required Fields Check
             if (!username || !password || !fullName || !department || !designation) {
                 showAlert('Please fill in all required fields marked with *', 'danger');
                 return;
+            }
+
+            // 2. Full Name Validation (No numbers, alphabetic characters only, min 2 letters)
+            if (/\d/.test(fullName)) {
+                showAlert('Full Name cannot contain numbers. Only alphabetic letters, spaces, and valid name characters are permitted.', 'danger');
+                document.getElementById('newEmpFullName')?.focus();
+                return;
+            }
+            if (!/^(?=.*[a-zA-Z].*[a-zA-Z])[a-zA-Z\s.'-]+$/.test(fullName)) {
+                showAlert('Full Name must contain at least 2 alphabetic letters and cannot be numbers or symbols only.', 'danger');
+                document.getElementById('newEmpFullName')?.focus();
+                return;
+            }
+
+            // 3. Username Validation (Lowercase alphanumeric, starts with letter, no spaces or numbers-only)
+            if (/[A-Z]/.test(username)) {
+                showAlert('Username must be lowercase letters only (e.g. rahul.sharma).', 'danger');
+                document.getElementById('newEmpUsername')?.focus();
+                return;
+            }
+            if (/^\d+$/.test(username) || !/^[a-z]/.test(username)) {
+                showAlert('Username must start with a lowercase letter and cannot be numbers only.', 'danger');
+                document.getElementById('newEmpUsername')?.focus();
+                return;
+            }
+            if (!/^[a-z][a-z0-9._]{2,29}$/.test(username)) {
+                showAlert('Username must be 3-30 characters long, starting with a lowercase letter, and contain only lowercase letters, digits, dots or underscores.', 'danger');
+                document.getElementById('newEmpUsername')?.focus();
+                return;
+            }
+
+            // 4. Password Validation (Min 6 characters, mixed letters and numbers/symbols)
+            if (password.length < 6) {
+                showAlert('Initial Password must be at least 6 characters long.', 'danger');
+                document.getElementById('newEmpPassword')?.focus();
+                return;
+            }
+            const hasLetter = /[a-zA-Z]/.test(password);
+            const hasNumberOrSymbol = /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+            if (!hasLetter || !hasNumberOrSymbol) {
+                showAlert('Initial Password must contain a mix of letters and numbers/symbols (e.g. EmployeePass2026!).', 'danger');
+                document.getElementById('newEmpPassword')?.focus();
+                return;
+            }
+
+            // 5. Reporting Manager Validation (if provided, must not contain numbers)
+            if (reportingManager) {
+                if (/\d/.test(reportingManager)) {
+                    showAlert('Reporting Manager cannot contain numbers. Only letters and standard name characters are permitted.', 'danger');
+                    document.getElementById('newEmpManager')?.focus();
+                    return;
+                }
+                if (!/^[a-zA-Z\s.'-]+$/.test(reportingManager)) {
+                    showAlert('Reporting Manager contains invalid characters. Only letters and standard name characters are allowed.', 'danger');
+                    document.getElementById('newEmpManager')?.focus();
+                    return;
+                }
             }
 
             if (submitBtn) {

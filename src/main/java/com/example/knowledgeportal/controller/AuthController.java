@@ -71,6 +71,16 @@ public class AuthController {
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        if (!principal.getUsername().equals(loginRequest.getUsername().trim())) {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    "Unauthorized",
+                    "Invalid username and password.",
+                    request.getRequestURI()
+            ));
+        }
+
         return ResponseEntity.ok(new UserResponse(principal.getId(), principal.getUsername(),
                 principal.getFullName(), principal.getRole()));
     }
@@ -96,6 +106,16 @@ public class AuthController {
         }
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        if (!principal.getUsername().equals(loginRequest.getUsername().trim())) {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    "Unauthorized",
+                    "Invalid username and password.",
+                    request.getRequestURI()
+            ));
+        }
+
         if (principal.getRole() != UserRole.ROLE_ADMIN) {
             SecurityContextHolder.clearContext();
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(

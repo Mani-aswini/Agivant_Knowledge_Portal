@@ -59,6 +59,14 @@ function initAuthPortal() {
         });
     }
 
+    const loginUsernameInput = document.getElementById('loginUsername');
+    if (loginUsernameInput) {
+        loginUsernameInput.addEventListener('input', () => {
+            clearAuthAlert();
+            loginUsernameInput.style.borderColor = '';
+        });
+    }
+
     // Unified Single Login Form
     const formUnifiedLogin = document.getElementById('formUnifiedLogin');
     if (formUnifiedLogin) {
@@ -66,12 +74,23 @@ function initAuthPortal() {
             e.preventDefault();
             clearAuthAlert();
 
-            const username = document.getElementById('loginUsername').value.trim();
+            const usernameInput = document.getElementById('loginUsername');
+            const username = usernameInput ? usernameInput.value.trim() : '';
             const password = document.getElementById('loginPassword').value;
             const submitBtn = document.getElementById('btnLoginSubmit');
 
             if (!username || !password) {
                 showAuthAlert('Please enter both username and password.');
+                return;
+            }
+
+            // Enforce lowercase usernames: employee usernames are strictly registered in lowercase
+            if (/[A-Z]/.test(username)) {
+                showAuthAlert(`Usernames are strictly lowercase. Please enter your username in lowercase (e.g. "${username.toLowerCase()}").`);
+                if (usernameInput) {
+                    usernameInput.style.borderColor = '#ef4444';
+                    usernameInput.focus();
+                }
                 return;
             }
 

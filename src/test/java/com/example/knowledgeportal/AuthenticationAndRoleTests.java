@@ -109,4 +109,17 @@ public class AuthenticationAndRoleTests {
                 .andExpect(jsonPath("$.username").value("employee1"))
                 .andExpect(jsonPath("$.role").value("ROLE_EMPLOYEE"));
     }
+
+    @Test
+    @Transactional
+    @DisplayName("TC-06-06: Mismatched-case username (e.g. Employee1 instead of employee1) rejects authentication with HTTP 401 Unauthorized")
+    void testMismatchedCaseUsernameRejected() throws Exception {
+        LoginRequest empReq = new LoginRequest("Employee1", "password123");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(empReq)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Invalid username and password")));
+    }
 }

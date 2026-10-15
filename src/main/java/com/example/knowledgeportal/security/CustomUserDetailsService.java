@@ -21,9 +21,19 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserAccount user = userAccountRepository.findByUsername(username)
-                .or(() -> userAccountRepository.findByUsernameIgnoreCase(username))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        if (username == null || username.isBlank()) {
+            throw new UsernameNotFoundException("Username cannot be empty");
+        }
+        String trimmed = username.trim();
+        UserAccount user = userAccountRepository.findByUsername(trimmed)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + trimmed));
+
+        // Enforce strict case-sensitive matching:
+        // Even if the SQL collation is case-insensitive, the stored username must match exact case.
+        if (!user.getUsername().equals(trimmed)) {
+            throw new UsernameNotFoundException("Invalid username: username is case-sensitive and must match exactly.");
+        }
+
         return new UserPrincipal(user);
     }
 }

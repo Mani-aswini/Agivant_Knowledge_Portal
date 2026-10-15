@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# Internal Knowledge Portal with AI Research Agent
+# Agivant Knowledge Portal - Internal AI Assistant with RAG
 
 [![Java](https://img.shields.io/badge/Java-21%20LTS-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
@@ -565,7 +564,4 @@ Authorization checks are run **before** returning search results, generating AI 
 
 ### Q6: How does the system handle AI model timeouts or service unavailability?
 **Answer:** `AiResearchAgent` catches timeouts or communication exceptions and transparently falls back to `SIMULATION_FALLBACK` mode. The response clearly labels the mode as `SIMULATION_FALLBACK`, presents factual excerpts from verified local chunks, and attaches exact source citations without crashing with an unhandled 500 error.
-=======
-# Agivant_Knowledge_Portal
-Internal AI Assistant 
->>>>>>> 2e8568ed7fab827c9b3e6fe44dcfc67b064221bf
+

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: agivant-knowledge-portal
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: AI_PROVIDER
+        value: GEMINI
+      - key: AI_API_KEY
+        sync: false

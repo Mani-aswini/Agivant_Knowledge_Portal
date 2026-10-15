@@ -8,15 +8,51 @@ public class AnalyticsResponse {
     private long totalActiveDocuments;
     private long totalArchivedDocuments;
     private long totalAwaitingReindex;
+    private long totalFailedIndexing;
+    private long totalSearches;
     private long totalFeedbackCount;
     private double overallAverageRating;
+    private boolean hasFeedbackRatings;
 
+    private Map<String, Object> processingHealth;
     private List<Map<String, Object>> documentsByCategoryAndStatus;
     private List<Map<String, Object>> documentsAwaitingReindex;
     private List<Map<String, Object>> frequentlySearchedCategories;
     private List<Map<String, Object>> feedbackRatingsByDocument;
 
     public AnalyticsResponse() {
+    }
+
+    public long getTotalFailedIndexing() {
+        return totalFailedIndexing;
+    }
+
+    public void setTotalFailedIndexing(long totalFailedIndexing) {
+        this.totalFailedIndexing = totalFailedIndexing;
+    }
+
+    public long getTotalSearches() {
+        return totalSearches;
+    }
+
+    public void setTotalSearches(long totalSearches) {
+        this.totalSearches = totalSearches;
+    }
+
+    public boolean isHasFeedbackRatings() {
+        return hasFeedbackRatings;
+    }
+
+    public void setHasFeedbackRatings(boolean hasFeedbackRatings) {
+        this.hasFeedbackRatings = hasFeedbackRatings;
+    }
+
+    public Map<String, Object> getProcessingHealth() {
+        return processingHealth;
+    }
+
+    public void setProcessingHealth(Map<String, Object> processingHealth) {
+        this.processingHealth = processingHealth;
     }
 
     // Getters and Setters

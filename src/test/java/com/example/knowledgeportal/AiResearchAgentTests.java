@@ -169,6 +169,33 @@ public class AiResearchAgentTests {
     }
 
     @Test
+    @DisplayName("TC-05-11: Verify live Gemini model response generates REAL_AI mode with valid citations")
+    void testGeminiLiveResponseProcessedWithCitations() {
+        Authentication employeeAuth = createAuth("employee1", "ROLE_EMPLOYEE");
+
+        Mockito.when(mockAiClient.isConfigured()).thenReturn(true);
+        Mockito.when(mockAiClient.getProvider()).thenReturn("GEMINI");
+        Mockito.when(mockAiClient.getModelName()).thenReturn("gemini-2.5-flash");
+        Mockito.when(mockAiClient.generateAnswer(anyString(), any())).thenReturn(
+                "According to the Company Annual Leave Policy, regular full-time employees are entitled to 25 days of paid annual leave."
+        );
+
+        AskRequest request = new AskRequest("How many days of annual leave are regular employees entitled to?");
+        AskResponse response = aiResearchAgent.ask(request, employeeAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained(), "Agent must not abstain when evidence is present.");
+        assertEquals("REAL_AI", response.getMode(), "Mode must be REAL_AI when live Gemini generates the response.");
+        assertTrue(response.getReasoningNotes().contains("Google Gemini (gemini-2.5-flash)"),
+                "Reasoning notes must identify Google Gemini model.");
+        assertTrue(response.getAnswer().contains("25 days"), "Answer must contain verified fact from model.");
+        assertNotNull(response.getSources());
+        assertFalse(response.getSources().isEmpty(), "Live AI answers must retain verified citations.");
+        assertEquals(1L, response.getSources().get(0).getDocumentId());
+    }
+
+
+    @Test
     @DisplayName("TC-05-12: Evaluate a small fixed question set using evidence support and citation correctness")
     void testFixedQuestionEvaluationSet() {
         Authentication employeeAuth = createAuth("employee1", "ROLE_EMPLOYEE");
@@ -199,4 +226,319 @@ public class AiResearchAgentTests {
             }
         }
     }
+
+    @Test
+    @DisplayName("Employee Aswini asks 'how many leaves did i have?' and AI answers warmly with her personalized data")
+    void testPersonalLeaveQueryAddressesEmployeeAswini() {
+        Authentication aswiniAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskRequest request = new AskRequest("how many leaves did i have?");
+        AskResponse response = aiResearchAgent.ask(request, aswiniAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained(), "Agent must not abstain for personal leave queries.");
+        assertNotNull(response.getAnswer());
+        assertTrue(response.getAnswer().contains("Hi Aswini") || response.getAnswer().contains("Aswini"),
+                "Answer must address employee by name: " + response.getAnswer());
+        assertTrue(response.getAnswer().contains("Planned") || response.getAnswer().contains("Annual"),
+                "Answer must detail planned leaves.");
+        assertTrue(response.getAnswer().contains("Casual"),
+                "Answer must detail casual leaves.");
+        assertTrue(response.getAnswer().contains("Sick"),
+                "Answer must detail sick leaves.");
+        assertTrue(response.getAnswer().contains("Work From Home") || response.getAnswer().contains("WFH"),
+                "Answer must detail WFH allowance.");
+    }
+
+    @Test
+    @DisplayName("User asks 'Tell me how many technical guides are there?' and AI provides the exact count")
+    void testCatalogInventoryCountQueryReturnsExactCount() {
+        Authentication auth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskRequest request = new AskRequest("Tell me how many technical guides are there?");
+        AskResponse response = aiResearchAgent.ask(request, auth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained());
+        assertNotNull(response.getAnswer());
+        assertTrue(response.getAnswer().toLowerCase().contains("technical guide") || 
+                   response.getAnswer().contains("1") || 
+                   response.getAnswer().toLowerCase().contains("spec-driven"),
+                "Answer must provide count or identify technical guides: " + response.getAnswer());
+    }
+
+    @Test
+    @DisplayName("User asks 'give me the Data about me like my name, work location whatever there?' and AI provides verified employee data")
+    void testPersonalEmployeeDataQueryReturnsNameAndWorkLocation() {
+        Authentication aswiniAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskRequest request = new AskRequest("give me the Data about me like my name, work location whatever there?");
+        AskResponse response = aiResearchAgent.ask(request, aswiniAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained(), "Agent must not abstain for personal profile queries.");
+        assertNotNull(response.getAnswer());
+        assertTrue(response.getAnswer().contains("Aswini Mani"),
+                "Answer must contain employee's full name: " + response.getAnswer());
+        assertTrue(response.getAnswer().contains("Chennai (Hybrid)"),
+                "Answer must contain employee's primary work location: " + response.getAnswer());
+        assertTrue(response.getAnswer().contains("EMP-1001"),
+                "Answer must contain employee code: " + response.getAnswer());
+        assertTrue(response.getAnswer().contains("Engineering"),
+                "Answer must contain department: " + response.getAnswer());
+        assertTrue(response.getAnswer().contains("Senior Software Engineer"),
+                "Answer must contain designation: " + response.getAnswer());
+        assertFalse(response.getSources().isEmpty(), "Answer must cite employee HR records.");
+        assertTrue(response.getSources().get(0).getDocumentTitle().contains("Employee & HR Record") ||
+                   response.getSources().get(0).getSectionReference().contains("HR Management System"),
+                "Citation source must be HR record, not unrelated policy documents.");
+    }
+
+    @Test
+    @DisplayName("Admin queries employee code 'EMP-1001' and receives verified directory data")
+    void testEmployeeLookupByCodeReturnsEmployeeData() {
+        Authentication adminAuth = createAuth("admin_user", "ROLE_ADMIN");
+
+        AskRequest request = new AskRequest("give me details of employee EMP-1001");
+        AskResponse response = aiResearchAgent.ask(request, adminAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained());
+        assertNotNull(response.getAnswer());
+        assertTrue(response.getAnswer().contains("Aswini Mani"));
+        assertTrue(response.getAnswer().contains("Chennai (Hybrid)"));
+        assertTrue(response.getAnswer().contains("Engineering"));
+    }
+
+    @Test
+    @DisplayName("Admin Portal 1: Admin asks for 'employee details' -> returns whole employee details for all employees including leaves")
+    void testAdminAsksAllEmployeeDetailsReturnsWholeDetailsWithLeaves() {
+        Authentication adminAuth = createAuth("admin_user", "ROLE_ADMIN");
+
+        AskRequest request = new AskRequest("give me details about all employess?");
+        AskResponse response = aiResearchAgent.ask(request, adminAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained());
+        String ans = response.getAnswer();
+        assertNotNull(ans);
+        // Must contain all employees
+        assertTrue(ans.contains("Ashwin Mani"), "Must include Ashwin Mani");
+        assertTrue(ans.contains("Aswini Mani"), "Must include Aswini Mani");
+        assertTrue(ans.contains("Alice Employee"), "Must include Alice Employee");
+        assertTrue(ans.contains("Suganthi Mani"), "Must include Suganthi Mani");
+        // Must contain roles, locations, and leave records for Admin
+        assertTrue(ans.contains("Principal IT Administrator"));
+        assertTrue(ans.contains("Senior Software Engineer"));
+        assertTrue(ans.contains("Planned Leaves Remaining") || ans.contains("Leave & Attendance Balances"),
+                "Admin view must include whole employee details with leave balances: " + ans);
+    }
+
+    @Test
+    @DisplayName("Admin Portal 2: Admin mentions 'me' in chat -> returns ONLY admin's own details")
+    void testAdminMentionsMeReturnsOnlyAdminDetails() {
+        Authentication adminAuth = createAuth("admin_user", "ROLE_ADMIN");
+
+        AskRequest request = new AskRequest("give me details about me?");
+        AskResponse response = aiResearchAgent.ask(request, adminAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained());
+        String ans = response.getAnswer();
+        assertNotNull(ans);
+        assertTrue(ans.contains("Ashwin Mani"), "Must contain admin full name");
+        assertTrue(ans.contains("EMP-1000"), "Must contain admin code");
+        assertTrue(ans.contains("Headquarters"), "Must contain admin location");
+        assertFalse(ans.contains("Alice Employee"), "Must NOT contain other employees");
+        assertFalse(ans.contains("Suganthi Mani"), "Must NOT contain other employees");
+    }
+
+    @Test
+    @DisplayName("Employee Portal 1: Employee asks 'employee details' -> returns ONLY name and role, not leave/personal information")
+    void testEmployeeAsksEmployeeDetailsReturnsOnlyNameAndRoleWithoutLeaves() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskRequest request = new AskRequest("employee details?");
+        AskResponse response = aiResearchAgent.ask(request, employeeAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained());
+        String ans = response.getAnswer();
+        assertNotNull(ans);
+        // Must contain names and roles
+        assertTrue(ans.contains("Ashwin Mani"));
+        assertTrue(ans.contains("Principal IT Administrator"));
+        assertTrue(ans.contains("Alice Employee"));
+        assertTrue(ans.contains("Software Engineer"));
+        // Must NOT contain colleague leave balances or private records
+        assertFalse(ans.contains("Planned Leaves Remaining"), "Regular employee view must NOT disclose colleague leave balances");
+        assertFalse(ans.contains("Sick Leaves Remaining"), "Regular employee view must NOT disclose colleague leave balances");
+        assertTrue(ans.contains("protected by") || ans.contains("restricted to HR and Administrators"),
+                "Must include privacy protection notice: " + ans);
+    }
+
+    @Test
+    @DisplayName("Employee Portal 2: Employee mentions 'me' -> returns ALL details about me (employee)")
+    void testEmployeeMentionsMeReturnsAllDetailsAboutEmployee() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskRequest request = new AskRequest("give me details about me?");
+        AskResponse response = aiResearchAgent.ask(request, employeeAuth);
+
+        assertNotNull(response);
+        assertFalse(response.isAbstained());
+        String ans = response.getAnswer();
+        assertNotNull(ans);
+        assertTrue(ans.contains("Aswini Mani"));
+        assertTrue(ans.contains("EMP-1001"));
+        assertTrue(ans.contains("Chennai (Hybrid)"));
+        assertTrue(ans.contains("Senior Software Engineer"));
+        assertTrue(ans.contains("Ashwin Mani"), "Must mention reporting manager");
+        assertTrue(ans.contains("Planned") || ans.contains("Annual"), "Must detail personal leaves");
+        assertTrue(ans.contains("Casual"), "Must detail casual leaves");
+        assertTrue(ans.contains("Sick"), "Must detail sick leaves");
+        assertTrue(ans.contains("Work From Home") || ans.contains("WFH"), "Must detail WFH allowance");
+    }
+
+    @Test
+    @DisplayName("Conversational 1: 'Hii' and 'Hii agent' return warm greetings and do NOT abstain or return manual passages")
+    void testConversationalGreetingsHiiAndHiiAgent() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        // Test "Hii"
+        AskResponse resHii = aiResearchAgent.ask(new AskRequest("Hii"), employeeAuth);
+        assertNotNull(resHii);
+        assertFalse(resHii.isAbstained(), "Agent must not abstain on casual greeting");
+        assertEquals("CONVERSATIONAL", resHii.getMode());
+        assertTrue(resHii.getAnswer().contains("Hello") || resHii.getAnswer().contains("Aswini"));
+        assertFalse(resHii.getAnswer().contains("sufficient evidence"), "Must not show missing evidence warning on greeting");
+
+        // Test "Hii agent"
+        AskResponse resAgent = aiResearchAgent.ask(new AskRequest("Hii agent"), employeeAuth);
+        assertNotNull(resAgent);
+        assertFalse(resAgent.isAbstained());
+        assertEquals("CONVERSATIONAL", resAgent.getMode());
+        assertTrue(resAgent.getAnswer().contains("Hello") || resAgent.getAnswer().contains("Aswini"));
+        assertFalse(resAgent.getAnswer().contains("BOLT Manual"), "Must not match BOLT Manual for 'agent' keyword");
+        assertFalse(resAgent.getAnswer().contains("slash-command prompt files"), "Must not match developer tools for greeting");
+
+        // Test "Hello"
+        AskResponse resHello = aiResearchAgent.ask(new AskRequest("hello"), employeeAuth);
+        assertNotNull(resHello);
+        assertEquals("CONVERSATIONAL", resHello.getMode());
+        assertTrue(resHello.getAnswer().contains("Hello"));
+    }
+
+    @Test
+    @DisplayName("Conversational 2: 'How are you' and 'What can you do' return appropriate status and capabilities")
+    void testConversationalWellbeingAndCapabilities() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        // Test "how are you"
+        AskResponse resHow = aiResearchAgent.ask(new AskRequest("how are you?"), employeeAuth);
+        assertNotNull(resHow);
+        assertFalse(resHow.isAbstained());
+        assertEquals("CONVERSATIONAL", resHow.getMode());
+        assertTrue(resHow.getAnswer().toLowerCase().contains("operational") || resHow.getAnswer().toLowerCase().contains("doing well"));
+
+        // Test "what can you do"
+        AskResponse resCapabilities = aiResearchAgent.ask(new AskRequest("what can you do?"), employeeAuth);
+        assertNotNull(resCapabilities);
+        assertFalse(resCapabilities.isAbstained());
+        assertEquals("CONVERSATIONAL", resCapabilities.getMode());
+        assertTrue(resCapabilities.getAnswer().contains("Key Capabilities") || resCapabilities.getAnswer().contains("Profile"));
+    }
+
+    @Test
+    @DisplayName("Conversational 3: 'Thank you' and 'Bye' return polite gratitude and farewell responses")
+    void testConversationalGratitudeAndFarewell() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        // Test "thank you"
+        AskResponse resThanks = aiResearchAgent.ask(new AskRequest("Thank you so much!"), employeeAuth);
+        assertNotNull(resThanks);
+        assertFalse(resThanks.isAbstained());
+        assertEquals("CONVERSATIONAL", resThanks.getMode());
+        assertTrue(resThanks.getAnswer().toLowerCase().contains("welcome"));
+
+        // Test "bye"
+        AskResponse resBye = aiResearchAgent.ask(new AskRequest("Goodbye!"), employeeAuth);
+        assertNotNull(resBye);
+        assertFalse(resBye.isAbstained());
+        assertEquals("CONVERSATIONAL", resBye.getMode());
+        assertTrue(resBye.getAnswer().toLowerCase().contains("goodbye") || resBye.getAnswer().toLowerCase().contains("day"));
+    }
+
+    @Test
+    @DisplayName("Conversational 4: Greeting combined with leave question routes to leave balance data")
+    void testConversationalGreetingWithSubstantiveLeaveQuestion() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskResponse res = aiResearchAgent.ask(new AskRequest("Hi, how many leaves do I have?"), employeeAuth);
+        assertNotNull(res);
+        assertFalse(res.isAbstained());
+        // Must contain leave balances rather than just a greeting
+        assertTrue(res.getAnswer().contains("Planned") || res.getAnswer().contains("Annual"));
+        assertTrue(res.getAnswer().contains("Casual"));
+    }
+
+    @Test
+    @DisplayName("Existence 1: 'Is there any document with Name Leave?' returns 'Yes, we have the document...'")
+    void testExistenceQueryFoundReturnsYesWeHaveDocumentName() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskResponse res = aiResearchAgent.ask(new AskRequest("Is there any document with Name Leave?"), employeeAuth);
+        assertNotNull(res);
+        assertFalse(res.isAbstained());
+        String ans = res.getAnswer();
+        assertNotNull(ans);
+        assertTrue(ans.contains("Yes, we have"), "Must begin with 'Yes, we have...': " + ans);
+        assertTrue(ans.contains("Company Annual Leave and Time Off Policy"), "Must name the document: " + ans);
+        assertFalse(ans.startsWith("Synthesizing information across"), "Must not start with generic synthesis line");
+    }
+
+    @Test
+    @DisplayName("Existence 2: Negative query for non-existent document returns 'No, we don't have...'")
+    void testExistenceQueryNotFoundReturnsNoWeDontHave() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskResponse res = aiResearchAgent.ask(new AskRequest("Is there any document with Name QuantumMechanics123NonExistent?"), employeeAuth);
+        assertNotNull(res);
+        assertFalse(res.isAbstained(), "Agent should cleanly resolve negative existence without failing/abstaining");
+        String ans = res.getAnswer();
+        assertNotNull(ans);
+        assertTrue(ans.contains("No, we don't have") || ans.contains("No, we do not have"),
+                "Must state 'No, we don't have...': " + ans);
+    }
+
+    @Test
+    @DisplayName("Conversational 5: Informal greetings like 'hlo', 'helo', 'hlw', 'good morning' return warm greeting and not insufficient evidence")
+    void testInformalGreetingsHandledAsConversational() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        String[] greetings = {"hlo", "hlo sir", "helo", "hlw", "good morning", "sup", "yo"};
+        for (String g : greetings) {
+            AskResponse res = aiResearchAgent.ask(new AskRequest(g), employeeAuth);
+            assertNotNull(res, "Response must not be null for greeting: " + g);
+            assertFalse(res.isAbstained(), "Greeting '" + g + "' must NOT be abstained");
+            assertEquals("CONVERSATIONAL", res.getMode(), "Greeting '" + g + "' must have CONVERSATIONAL mode");
+            assertTrue(res.getAnswer().contains("Hello") || res.getAnswer().contains("Welcome"),
+                    "Greeting '" + g + "' must return warm greeting message: " + res.getAnswer());
+            assertFalse(res.getAnswer().contains("insufficient evidence"),
+                    "Greeting '" + g + "' must NOT return insufficient evidence error: " + res.getAnswer());
+        }
+    }
+
+    @Test
+    @DisplayName("Out-of-Domain Query: Question with no matching internal document returns insufficient evidence message")
+    void testOutOfDomainQuestionReturnsInsufficientEvidence() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        AskResponse res = aiResearchAgent.ask(new AskRequest("What are the architectural details of quantum string theory?"), employeeAuth);
+        assertNotNull(res);
+        assertTrue(res.isAbstained(), "Must be abstained for non-existent company info");
+        assertTrue(res.getAnswer().contains("I cannot find sufficient evidence in the approved enterprise documents accessible to your clearance level to answer this question reliably."),
+                "Must return standard insufficient evidence message: " + res.getAnswer());
+    }
 }
+

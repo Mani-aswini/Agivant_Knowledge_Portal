@@ -6,5 +6,6 @@ package com.example.knowledgeportal.entity;
 public enum DocumentCategory {
     POLICY,
     TECHNICAL_RUNBOOK,
-    FAQ
+    FAQ,
+    OTHER
 }

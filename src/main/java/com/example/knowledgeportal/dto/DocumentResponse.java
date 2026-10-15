@@ -13,10 +13,12 @@ public class DocumentResponse {
     private String title;
     private String description;
     private DocumentCategory category;
+    private String customCategory;
     private String owner;
     private AccessLevel accessLevel;
     private int version;
     private DocumentStatus status;
+    private com.example.knowledgeportal.entity.IndexingStatus indexingStatus;
     private String originalFileName;
     private String contentType;
     private LocalDateTime uploadedAt;
@@ -33,10 +35,12 @@ public class DocumentResponse {
         this.title = doc.getTitle();
         this.description = doc.getDescription();
         this.category = doc.getCategory();
+        this.customCategory = doc.getCustomCategory();
         this.owner = doc.getOwner();
         this.accessLevel = doc.getAccessLevel();
         this.version = doc.getVersion();
         this.status = doc.getStatus();
+        this.indexingStatus = doc.getIndexingStatus();
         this.originalFileName = doc.getOriginalFileName();
         this.contentType = doc.getContentType();
         this.uploadedAt = doc.getUploadedAt();
@@ -79,6 +83,14 @@ public class DocumentResponse {
         this.category = category;
     }
 
+    public String getCustomCategory() {
+        return customCategory;
+    }
+
+    public void setCustomCategory(String customCategory) {
+        this.customCategory = customCategory;
+    }
+
     public String getOwner() {
         return owner;
     }
@@ -109,6 +121,14 @@ public class DocumentResponse {
 
     public void setStatus(DocumentStatus status) {
         this.status = status;
+    }
+
+    public com.example.knowledgeportal.entity.IndexingStatus getIndexingStatus() {
+        return indexingStatus;
+    }
+
+    public void setIndexingStatus(com.example.knowledgeportal.entity.IndexingStatus indexingStatus) {
+        this.indexingStatus = indexingStatus;
     }
 
     public String getOriginalFileName() {

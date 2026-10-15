@@ -10,6 +10,7 @@ public class FeedbackResponse {
     private Long documentId;
     private String question;
     private String answerReference;
+    private String answerText;
     private int rating;
     private String comment;
     private String userId;
@@ -24,6 +25,7 @@ public class FeedbackResponse {
         this.documentId = feedback.getDocumentId();
         this.question = feedback.getQuestion();
         this.answerReference = feedback.getAnswerReference();
+        this.answerText = feedback.getAnswerText();
         this.rating = feedback.getRating();
         this.comment = feedback.getComment();
         this.userId = feedback.getUserId();
@@ -61,6 +63,14 @@ public class FeedbackResponse {
 
     public void setAnswerReference(String answerReference) {
         this.answerReference = answerReference;
+    }
+
+    public String getAnswerText() {
+        return answerText;
+    }
+
+    public void setAnswerText(String answerText) {
+        this.answerText = answerText;
     }
 
     public int getRating() {

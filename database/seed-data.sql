@@ -9,8 +9,8 @@ USE knowledge_portal_db;
 -- (Spring Boot ApplicationRunner also ensures these users exist with fresh hashing if missing)
 INSERT IGNORE INTO users (id, username, password, full_name, role, enabled, created_at) VALUES
 (1, 'employee1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Alice Employee', 'ROLE_EMPLOYEE', TRUE, NOW()),
-(2, 'hr_user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Helen HR Manager', 'ROLE_HR', TRUE, NOW()),
-(3, 'admin_user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Arthur Administrator', 'ROLE_ADMIN', TRUE, NOW());
+(2, 'hr_user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Suganthi Mani', 'ROLE_HR', TRUE, NOW()),
+(3, 'admin_user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Ashwin Mani', 'ROLE_ADMIN', TRUE, NOW());
 
 -- 2. Seed Approved Knowledge Documents
 INSERT IGNORE INTO knowledge_documents (id, title, description, category, owner, access_level, version, status, original_file_name, content_type, searchable_text, file_storage_path, uploaded_at, updated_at, needs_reindex, archived_at) VALUES

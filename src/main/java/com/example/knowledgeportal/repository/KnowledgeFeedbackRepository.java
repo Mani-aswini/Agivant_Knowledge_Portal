@@ -12,6 +12,10 @@ public interface KnowledgeFeedbackRepository extends JpaRepository<KnowledgeFeed
 
     List<KnowledgeFeedback> findByDocumentId(Long documentId);
 
+    List<KnowledgeFeedback> findAllByOrderByCreatedAtDesc();
+
+    long countByRating(int rating);
+
     @Query("SELECT AVG(f.rating) FROM KnowledgeFeedback f")
     Double getOverallAverageRating();
 
@@ -19,6 +23,7 @@ public interface KnowledgeFeedbackRepository extends JpaRepository<KnowledgeFeed
     @Query("SELECT f.documentId, COUNT(f.id), AVG(f.rating), " +
            "SUM(CASE WHEN f.rating = 5 THEN 1L ELSE 0L END), " +
            "SUM(CASE WHEN f.rating <= 2 THEN 1L ELSE 0L END) " +
-           "FROM KnowledgeFeedback f GROUP BY f.documentId")
+           "FROM KnowledgeFeedback f WHERE f.documentId IS NOT NULL GROUP BY f.documentId")
     List<Object[]> findFeedbackStatsGroupedByDocument();
 }
+

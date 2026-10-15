@@ -126,6 +126,17 @@ public class PermissionService {
         return getCurrentUserRole(auth) == UserRole.ROLE_ADMIN;
     }
 
+    public boolean isUserAdminOrHr(Authentication auth) {
+        UserRole role = getCurrentUserRole(auth);
+        return role == UserRole.ROLE_ADMIN || role == UserRole.ROLE_HR;
+    }
+
+    public void validateAdminOrHr(Authentication auth) {
+        if (!isUserAdminOrHr(auth)) {
+            throw new UnauthorizedAccessException("Access Denied: Only administrators or HR personnel can access administrative feedback data.");
+        }
+    }
+
     public boolean isDocumentOwner(Authentication auth, KnowledgeDocument document) {
         String currentUsername = getCurrentUsername(auth);
         return currentUsername.equalsIgnoreCase(document.getOwner());

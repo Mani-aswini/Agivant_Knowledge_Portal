@@ -4,11 +4,12 @@ import com.example.knowledgeportal.dto.DocumentDetailResponse;
 import com.example.knowledgeportal.dto.DocumentResponse;
 import com.example.knowledgeportal.dto.SearchRequest;
 import com.example.knowledgeportal.dto.SearchResponse;
-import com.example.knowledgeportal.entity.AccessLevel;
-import com.example.knowledgeportal.entity.DocumentCategory;
-import com.example.knowledgeportal.entity.DocumentStatus;
+import com.example.knowledgeportal.entity.*;
 import com.example.knowledgeportal.exception.InvalidFileException;
+import com.example.knowledgeportal.repository.ProcessingJobRepository;
+import com.example.knowledgeportal.service.AuditLogService;
 import com.example.knowledgeportal.service.KnowledgeDocumentService;
+import com.example.knowledgeportal.service.ProcessingJobService;
 import com.example.knowledgeportal.service.SearchService;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -41,6 +42,15 @@ public class DocumentLifecycleTests {
 
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private AuditLogService auditLogService;
+
+    @Autowired
+    private ProcessingJobService processingJobService;
+
+    @Autowired
+    private ProcessingJobRepository processingJobRepository;
 
     private Authentication createAuth(String username, String role) {
         return new UsernamePasswordAuthenticationToken(username, "pass", List.of(new SimpleGrantedAuthority(role)));
@@ -80,6 +90,7 @@ public class DocumentLifecycleTests {
     }
 
     @Test
+    @Transactional
     @DisplayName("TC-05-01-PDF: Upload a supported non-empty PDF document and verify indexing")
     void testUploadPdfDocument() throws IOException {
         Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
@@ -205,5 +216,198 @@ public class DocumentLifecycleTests {
         );
         boolean foundArchived = res.getResults().stream().anyMatch(r -> r.getDocumentId().equals(doc.getId()));
         assertFalse(foundArchived, "Archived document must not appear in active search results.");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Test Document Restore: Archived document can be restored to ACTIVE state and becomes searchable again")
+    void testRestoreDocument() {
+        Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "database_failover_runbook.txt", "text/plain",
+                "Primary replica failover procedure: Execute promote-slave script within 60 seconds.".getBytes(StandardCharsets.UTF_8)
+        );
+        DocumentResponse doc = documentService.uploadAndIndexDocument(
+                file, "Database Failover Procedure", "Failover runbook",
+                DocumentCategory.TECHNICAL_RUNBOOK, AccessLevel.EMPLOYEE, auth
+        );
+
+        // 1. Archive document
+        DocumentResponse archived = documentService.archiveDocument(doc.getId(), auth);
+        assertEquals(DocumentStatus.ARCHIVED, archived.getStatus());
+
+        // Confirm excluded from active search
+        SearchResponse searchArchived = searchService.search(
+                new SearchRequest("promote-slave", DocumentCategory.TECHNICAL_RUNBOOK, DocumentStatus.ACTIVE), auth
+        );
+        assertFalse(searchArchived.getResults().stream().anyMatch(r -> r.getDocumentId().equals(doc.getId())));
+
+        // 2. Restore document
+        DocumentResponse restored = documentService.restoreDocument(doc.getId(), auth);
+        assertEquals(DocumentStatus.ACTIVE, restored.getStatus(), "Restored document status must be ACTIVE.");
+        assertEquals(doc.getId(), restored.getId());
+
+        // 3. Confirm restored document is once again searchable in active searches
+        SearchResponse searchRestored = searchService.search(
+                new SearchRequest("promote-slave", DocumentCategory.TECHNICAL_RUNBOOK, DocumentStatus.ACTIVE), auth
+        );
+        assertTrue(searchRestored.getResults().stream().anyMatch(r -> r.getDocumentId().equals(doc.getId())),
+                "Restored document must reappear in active search results.");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Test Document Update and Version History: Updating content creates a new version snapshot and preserves history")
+    void testDocumentUpdateAndHistoricalVersionAuditing() {
+        Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
+
+        MockMultipartFile fileV1 = new MockMultipartFile(
+                "file", "cloud_security_standard_v1.txt", "text/plain",
+                "Security standard version 1: All passwords require minimum 8 characters.".getBytes(StandardCharsets.UTF_8)
+        );
+        DocumentResponse doc = documentService.uploadAndIndexDocument(
+                fileV1, "Cloud Security Standard", "Initial corporate policy",
+                DocumentCategory.POLICY, AccessLevel.EMPLOYEE, auth
+        );
+        assertEquals(1, doc.getVersion());
+
+        // Update document with new content file and revised metadata
+        MockMultipartFile fileV2 = new MockMultipartFile(
+                "file", "cloud_security_standard_v2.txt", "text/plain",
+                "Security standard version 2: Passwords require 16 characters and hardware FIDO2 keys.".getBytes(StandardCharsets.UTF_8)
+        );
+        DocumentResponse updated = documentService.updateDocument(
+                doc.getId(), fileV2, "Cloud Security Standard 2026", "Revised security policy",
+                DocumentCategory.POLICY, AccessLevel.EMPLOYEE, auth
+        );
+
+        assertEquals(2, updated.getVersion(), "Updating file must bump document version to 2.");
+        assertEquals("Cloud Security Standard 2026", updated.getTitle());
+
+        // Query historical versions
+        List<DocumentVersion> versions = documentService.getDocumentVersions(doc.getId(), auth);
+        assertNotNull(versions);
+        assertTrue(versions.size() >= 2, "Must contain at least two version snapshots (v1 and v2).");
+        assertEquals(2, versions.get(0).getVersionNumber(), "Latest version must be first in list.");
+        assertEquals(1, versions.get(1).getVersionNumber(), "Baseline version must be preserved.");
+    }
+
+    @Test
+    @DisplayName("Test Magic-Byte Validation: Spoofed PDF with plain text content is rejected")
+    void testMagicByteValidationRejectsFakePdf() {
+        Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
+
+        // File named fake.pdf but containing plain text without %PDF- magic bytes
+        byte[] fakePdfBytes = "This is a plain text file pretending to be a PDF document!".getBytes(StandardCharsets.UTF_8);
+        MockMultipartFile spoofedFile = new MockMultipartFile(
+                "file", "malicious_spoof.pdf", "application/pdf", fakePdfBytes
+        );
+
+        InvalidFileException ex = assertThrows(InvalidFileException.class, () -> {
+            documentService.uploadAndIndexDocument(
+                    spoofedFile, "Fake PDF Document", "Attempted magic-byte spoofing",
+                    DocumentCategory.TECHNICAL_RUNBOOK, AccessLevel.EMPLOYEE, auth
+            );
+        }, "Spoofed PDF lacking %PDF- magic header must be rejected.");
+
+        assertTrue(ex.getMessage().contains("signature") || ex.getMessage().contains("PDF"),
+                "Exception message must mention invalid PDF signature.");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Test Processing Job Retry: Failed job can be safely retried and transitioned to INDEXED")
+    void testProcessingJobRetryFlow() {
+        Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
+
+        // Seed a document
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "incident_triage.txt", "text/plain",
+                "Incident triage procedure: Notify on-call engineer within 5 minutes.".getBytes(StandardCharsets.UTF_8)
+        );
+        DocumentResponse doc = documentService.uploadAndIndexDocument(
+                file, "Incident Triage Workflow", "Operational triage",
+                DocumentCategory.TECHNICAL_RUNBOOK, AccessLevel.ADMIN, auth
+        );
+
+        // Record a synthetic failed job for this document
+        ProcessingJob failedJob = new ProcessingJob(
+                doc.getId(), doc.getTitle(), doc.getVersion(), JobType.REINDEX, IndexingStatus.FAILED
+        );
+        failedJob.setErrorMessage("Simulated vector embedding service timeout");
+        failedJob = processingJobRepository.save(failedJob);
+
+        assertEquals(IndexingStatus.FAILED, failedJob.getStatus());
+
+        // Retry the job
+        ProcessingJob retriedJob = processingJobService.retryJob(failedJob.getId(), auth);
+        assertNotNull(retriedJob);
+        assertEquals(IndexingStatus.INDEXED, retriedJob.getStatus(), "Retried job must transition to INDEXED upon successful re-indexing.");
+        assertEquals(1, retriedJob.getRetryCount(), "Retry count must be incremented to 1.");
+        assertNull(retriedJob.getErrorMessage(), "Error message must be cleared upon successful retry.");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Test Audit Log Recording: Document lifecycle events record immutable audit logs")
+    void testAuditLogRecordingOnLifecycleEvents() {
+        Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "audit_test_doc.txt", "text/plain",
+                "Corporate governance and compliance testing content.".getBytes(StandardCharsets.UTF_8)
+        );
+        DocumentResponse doc = documentService.uploadAndIndexDocument(
+                file, "Compliance Testing Document", "Audit test",
+                DocumentCategory.POLICY, AccessLevel.ADMIN, auth
+        );
+
+        List<AuditLog> recentLogs = auditLogService.getRecentAuditLogs();
+        assertNotNull(recentLogs);
+        assertFalse(recentLogs.isEmpty(), "Audit log must contain recorded events.");
+
+        boolean foundUploadLog = recentLogs.stream().anyMatch(l ->
+                "UPLOAD_DOCUMENT".equals(l.getAction()) &&
+                doc.getId().equals(l.getResourceId()) &&
+                "SUCCESS".equals(l.getOutcome()) &&
+                "admin_user".equals(l.getActor())
+        );
+        assertTrue(foundUploadLog, "Audit log must contain entry for UPLOAD_DOCUMENT with actor admin_user.");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("TC-05-12: Upload document with category OTHER and custom category name")
+    void testUploadDocumentWithOtherAndCustomCategory() {
+        Authentication auth = createAuth("admin_user", "ROLE_ADMIN");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "compliance_charter.txt", "text/plain",
+                "Corporate compliance framework, ethics reporting channels, and anti-corruption standards.".getBytes()
+        );
+
+        // Case 1: OTHER selected without specifying custom category should throw InvalidFileException
+        assertThrows(InvalidFileException.class, () -> {
+            documentService.uploadAndIndexDocument(
+                    file, "Compliance Charter", "Corporate standards",
+                    DocumentCategory.OTHER, "   ", AccessLevel.EMPLOYEE, auth
+            );
+        }, "Selecting OTHER without a custom category name must be rejected.");
+
+        // Case 2: OTHER selected with custom category succeeds
+        DocumentResponse response = documentService.uploadAndIndexDocument(
+                file, "Compliance Charter", "Corporate standards",
+                DocumentCategory.OTHER, "Compliance & Ethics", AccessLevel.EMPLOYEE, auth
+        );
+
+        assertNotNull(response);
+        assertEquals(DocumentCategory.OTHER, response.getCategory());
+        assertEquals("Compliance & Ethics", response.getCustomCategory());
+        assertEquals("Compliance Charter", response.getTitle());
+
+        DocumentDetailResponse details = documentService.getDocumentDetails(response.getId(), auth);
+        assertEquals(DocumentCategory.OTHER, details.getDocument().getCategory());
+        assertEquals("Compliance & Ethics", details.getDocument().getCustomCategory());
     }
 }

@@ -30,33 +30,67 @@ public class AnalyticsService {
     private final KnowledgeFeedbackRepository feedbackRepository;
     private final SearchHistoryRepository searchHistoryRepository;
     private final PermissionService permissionService;
+    private final ProcessingJobService processingJobService;
 
     public AnalyticsService(KnowledgeDocumentRepository documentRepository,
                             KnowledgeChunkRepository chunkRepository,
                             KnowledgeFeedbackRepository feedbackRepository,
                             SearchHistoryRepository searchHistoryRepository,
-                            PermissionService permissionService) {
+                            PermissionService permissionService,
+                            ProcessingJobService processingJobService) {
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.feedbackRepository = feedbackRepository;
         this.searchHistoryRepository = searchHistoryRepository;
         this.permissionService = permissionService;
+        this.processingJobService = processingJobService;
     }
 
     @Transactional(readOnly = true)
     public AnalyticsResponse getAnalyticsDashboard() {
+        return getAnalyticsDashboard(null);
+    }
+
+    @Transactional(readOnly = true)
+    public AnalyticsResponse getAnalyticsDashboard(Authentication auth) {
         AnalyticsResponse response = new AnalyticsResponse();
 
-        response.setTotalActiveDocuments(documentRepository.countByStatus(DocumentStatus.ACTIVE));
-        response.setTotalArchivedDocuments(documentRepository.countByStatus(DocumentStatus.ARCHIVED));
-        response.setTotalAwaitingReindex(documentRepository.countByNeedsReindexTrueAndStatus(DocumentStatus.ACTIVE));
-        response.setTotalFeedbackCount(feedbackRepository.count());
+        Set<AccessLevel> allowedLevels = permissionService.getAllowedAccessLevels(auth);
+        boolean isAdmin = permissionService.isUserAdmin(auth);
+
+        // Role-based active document counts
+        response.setTotalActiveDocuments(documentRepository.countByStatusAndAccessLevelIn(DocumentStatus.ACTIVE, allowedLevels));
+
+        if (isAdmin) {
+            response.setTotalArchivedDocuments(documentRepository.countByStatus(DocumentStatus.ARCHIVED));
+            response.setTotalAwaitingReindex(documentRepository.countByNeedsReindexTrueAndStatus(DocumentStatus.ACTIVE));
+            response.setTotalFailedIndexing(documentRepository.countByIndexingStatus(com.example.knowledgeportal.entity.IndexingStatus.FAILED));
+        } else {
+            String username = permissionService.getCurrentUsername(auth);
+            response.setTotalArchivedDocuments(documentRepository.countByStatusAndOwner(DocumentStatus.ARCHIVED, username));
+            response.setTotalAwaitingReindex(documentRepository.countByNeedsReindexTrueAndStatusAndAccessLevelIn(DocumentStatus.ACTIVE, allowedLevels));
+            response.setTotalFailedIndexing(documentRepository.countByIndexingStatusAndAccessLevelIn(com.example.knowledgeportal.entity.IndexingStatus.FAILED, allowedLevels));
+        }
+
+        response.setTotalSearches(searchHistoryRepository.count());
+
+        long feedbackCount = feedbackRepository.count();
+        response.setTotalFeedbackCount(feedbackCount);
+        response.setHasFeedbackRatings(feedbackCount > 0);
 
         Double avgRating = feedbackRepository.getOverallAverageRating();
         response.setOverallAverageRating(avgRating != null ? Math.round(avgRating * 100.0) / 100.0 : 0.0);
 
-        // 1. Documents grouped by category and status
-        List<Object[]> catStatusList = documentRepository.countGroupedByCategoryAndStatus();
+        // Document Processing Health from actual pipeline state
+        response.setProcessingHealth(processingJobService.getProcessingHealthSummary());
+
+        // 1. Documents grouped by category and status (role-scoped)
+        List<Object[]> catStatusList;
+        if (isAdmin) {
+            catStatusList = documentRepository.countGroupedByCategoryAndStatus();
+        } else {
+            catStatusList = documentRepository.countGroupedByCategoryAndStatusAndAccessLevelIn(allowedLevels);
+        }
         List<Map<String, Object>> catStatusMapList = new ArrayList<>();
         for (Object[] row : catStatusList) {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -67,8 +101,13 @@ public class AnalyticsService {
         }
         response.setDocumentsByCategoryAndStatus(catStatusMapList);
 
-        // 2. Documents awaiting re-indexing
-        List<KnowledgeDocument> reindexDocs = documentRepository.findByNeedsReindexTrueAndStatus(DocumentStatus.ACTIVE);
+        // 2. Documents awaiting re-indexing (role-scoped)
+        List<KnowledgeDocument> reindexDocs;
+        if (isAdmin) {
+            reindexDocs = documentRepository.findByNeedsReindexTrueAndStatus(DocumentStatus.ACTIVE);
+        } else {
+            reindexDocs = documentRepository.findByNeedsReindexTrueAndStatusAndAccessLevelIn(DocumentStatus.ACTIVE, allowedLevels);
+        }
         List<Map<String, Object>> reindexList = new ArrayList<>();
         for (KnowledgeDocument doc : reindexDocs) {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -93,17 +132,26 @@ public class AnalyticsService {
         }
         response.setFrequentlySearchedCategories(topCategoriesList);
 
-        // 4. Feedback ratings grouped by document
+        // 4. Feedback ratings grouped by document (filter accessible docs)
         List<Object[]> feedbackStats = feedbackRepository.findFeedbackStatsGroupedByDocument();
         List<Map<String, Object>> feedbackStatsList = new ArrayList<>();
         for (Object[] row : feedbackStats) {
+            if (row[0] == null) {
+                continue;
+            }
             Long docId = ((Number) row[0]).longValue();
             Optional<KnowledgeDocument> docOpt = documentRepository.findById(docId);
-            String title = docOpt.map(KnowledgeDocument::getTitle).orElse("Document #" + docId);
+            if (docOpt.isEmpty()) {
+                continue;
+            }
+            KnowledgeDocument doc = docOpt.get();
+            if (!permissionService.canAccessDocument(auth, doc)) {
+                continue;
+            }
 
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("documentId", docId);
-            map.put("title", title);
+            map.put("title", doc.getTitle());
             map.put("feedbackCount", row[1] != null ? ((Number) row[1]).longValue() : 0L);
             map.put("averageRating", row[2] != null ? Math.round(((Number) row[2]).doubleValue() * 10.0) / 10.0 : 0.0);
             map.put("fiveStarCount", row[3] != null ? ((Number) row[3]).longValue() : 0L);

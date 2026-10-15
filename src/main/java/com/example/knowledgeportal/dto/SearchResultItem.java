@@ -7,6 +7,7 @@ public class SearchResultItem {
     private Long documentId;
     private String title;
     private DocumentCategory category;
+    private String customCategory;
     private int version;
     private Long chunkId;
     private int chunkIndex;
@@ -14,6 +15,9 @@ public class SearchResultItem {
     private Integer pageNumber;
     private String snippet;
     private double score;
+    private String contentType;
+    private String originalFileName;
+    private String description;
 
     public SearchResultItem() {
     }
@@ -57,6 +61,14 @@ public class SearchResultItem {
 
     public void setCategory(DocumentCategory category) {
         this.category = category;
+    }
+
+    public String getCustomCategory() {
+        return customCategory;
+    }
+
+    public void setCustomCategory(String customCategory) {
+        this.customCategory = customCategory;
     }
 
     public int getVersion() {
@@ -113,5 +125,29 @@ public class SearchResultItem {
 
     public void setScore(double score) {
         this.score = score;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

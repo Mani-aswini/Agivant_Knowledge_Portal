@@ -3,9 +3,11 @@ package com.example.knowledgeportal.service;
 import com.example.knowledgeportal.exception.InvalidFileException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +28,9 @@ import java.nio.charset.StandardCharsets;
  */
 @Service
 public class DocumentParserService {
+
+    @Value("${knowledge.upload.max-size-bytes:10485760}")
+    private long maxFileSizeBytes; // 10MB default
 
     public static class ExtractedDocument {
         private final String text;
@@ -52,11 +57,17 @@ public class DocumentParserService {
     }
 
     /**
-     * Extracts text from an incoming MultipartFile upload.
+     * Extracts text from an incoming MultipartFile upload after strict validation.
      */
     public ExtractedDocument parseUploadedFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("Uploaded file is empty or missing. Please select a valid document.");
+        }
+
+        // 1. Enforce configurable file size limit
+        if (file.getSize() > maxFileSizeBytes) {
+            throw new InvalidFileException("File size (" + (file.getSize() / 1024) + " KB) exceeds maximum allowed limit of " +
+                    (maxFileSizeBytes / (1024 * 1024)) + " MB.");
         }
 
         String filename = file.getOriginalFilename();
@@ -66,16 +77,37 @@ public class DocumentParserService {
 
         String lowerFilename = filename.toLowerCase();
         String contentType = file.getContentType();
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            throw new InvalidFileException("Failed to read uploaded file: " + e.getMessage());
+        }
+
         String extractedText;
 
         try {
             if (lowerFilename.endsWith(".txt")) {
-                extractedText = extractTextFromTxt(file.getInputStream());
+                // Strict check: plain text must not contain binary null bytes (0x00)
+                for (int i = 0; i < Math.min(fileBytes.length, 1024); i++) {
+                    if (fileBytes[i] == 0) {
+                        throw new InvalidFileException("Spoofed file detected: File has .txt extension but contains binary executable content.");
+                    }
+                }
+                extractedText = new String(fileBytes, StandardCharsets.UTF_8);
                 if (contentType == null || contentType.isBlank()) {
                     contentType = "text/plain";
                 }
             } else if (lowerFilename.endsWith(".pdf")) {
-                extractedText = extractTextFromPdf(file.getInputStream());
+                // Magic-byte check: Adobe PDF must start with '%PDF-'
+                if (fileBytes.length < 5) {
+                    throw new InvalidFileException("File is too small to be a valid PDF document.");
+                }
+                String header = new String(fileBytes, 0, Math.min(fileBytes.length, 10), StandardCharsets.US_ASCII);
+                if (!header.startsWith("%PDF")) {
+                    throw new InvalidFileException("Spoofed file detected: File has .pdf extension but lacks a valid PDF header (%PDF-).");
+                }
+                extractedText = extractTextFromPdf(new ByteArrayInputStream(fileBytes));
                 if (contentType == null || contentType.isBlank()) {
                     contentType = "application/pdf";
                 }

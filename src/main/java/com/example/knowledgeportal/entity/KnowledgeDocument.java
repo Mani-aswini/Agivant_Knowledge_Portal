@@ -36,6 +36,9 @@ public class KnowledgeDocument {
     @Column(nullable = false, length = 50)
     private DocumentCategory category;
 
+    @Column(name = "custom_category", length = 100)
+    private String customCategory;
+
     @Column(nullable = false, length = 100)
     private String owner;
 
@@ -49,6 +52,10 @@ public class KnowledgeDocument {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private DocumentStatus status = DocumentStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "indexing_status", nullable = false, length = 50)
+    private IndexingStatus indexingStatus = IndexingStatus.INDEXED;
 
     @Column(name = "original_file_name", nullable = false, length = 255)
     private String originalFileName;
@@ -91,6 +98,7 @@ public class KnowledgeDocument {
         this.fileStoragePath = fileStoragePath;
         this.version = 1;
         this.status = DocumentStatus.ACTIVE;
+        this.indexingStatus = IndexingStatus.INDEXED;
         this.needsReindex = false;
         this.uploadedAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -103,11 +111,19 @@ public class KnowledgeDocument {
         this.updatedAt = LocalDateTime.now();
     }
 
+    // Helper method to safely restore an archived document
+    public void restore() {
+        this.status = DocumentStatus.ACTIVE;
+        this.archivedAt = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     // Helper method for version increment upon re-indexing
     public void incrementVersion() {
         this.version += 1;
         this.updatedAt = LocalDateTime.now();
         this.needsReindex = false;
+        this.indexingStatus = IndexingStatus.INDEXED;
     }
 
     // Getters and Setters
@@ -141,6 +157,14 @@ public class KnowledgeDocument {
 
     public void setCategory(DocumentCategory category) {
         this.category = category;
+    }
+
+    public String getCustomCategory() {
+        return customCategory;
+    }
+
+    public void setCustomCategory(String customCategory) {
+        this.customCategory = customCategory;
     }
 
     public String getOwner() {
@@ -237,5 +261,13 @@ public class KnowledgeDocument {
 
     public void setArchivedAt(LocalDateTime archivedAt) {
         this.archivedAt = archivedAt;
+    }
+
+    public IndexingStatus getIndexingStatus() {
+        return indexingStatus;
+    }
+
+    public void setIndexingStatus(IndexingStatus indexingStatus) {
+        this.indexingStatus = indexingStatus;
     }
 }

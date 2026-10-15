@@ -60,6 +60,11 @@ public class SecurityConfig {
             // Disable CSRF for simple REST API testing
             .csrf(csrf -> csrf.disable())
             
+            // Allow same-origin iframes so documents can be previewed in the reader modal
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin())
+            )
+            
             // Allow sessions for browser UI and allow HTTP Basic for API testing
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .httpBasic(Customizer.withDefaults())

@@ -21,7 +21,7 @@ public class KnowledgeFeedback {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "document_id", nullable = false)
+    @Column(name = "document_id")
     private Long documentId;
 
     @Column(nullable = false, length = 500)
@@ -29,6 +29,9 @@ public class KnowledgeFeedback {
 
     @Column(name = "answer_reference", nullable = false, length = 100)
     private String answerReference;
+
+    @Column(name = "answer_text", columnDefinition = "TEXT")
+    private String answerText;
 
     @Min(value = 1, message = "Rating must be at least 1 star")
     @Max(value = 5, message = "Rating cannot exceed 5 stars")
@@ -49,12 +52,18 @@ public class KnowledgeFeedback {
 
     public KnowledgeFeedback(Long documentId, String question, String answerReference,
                              int rating, String comment, String userId) {
+        this(documentId, question, answerReference, rating, comment, userId, null);
+    }
+
+    public KnowledgeFeedback(Long documentId, String question, String answerReference,
+                             int rating, String comment, String userId, String answerText) {
         this.documentId = documentId;
         this.question = question;
         this.answerReference = answerReference;
         this.rating = rating;
         this.comment = comment;
         this.userId = userId;
+        this.answerText = answerText;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -113,6 +122,14 @@ public class KnowledgeFeedback {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getAnswerText() {
+        return answerText;
+    }
+
+    public void setAnswerText(String answerText) {
+        this.answerText = answerText;
     }
 
     public LocalDateTime getCreatedAt() {

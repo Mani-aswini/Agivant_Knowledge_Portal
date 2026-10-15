@@ -23,13 +23,28 @@ public interface KnowledgeDocumentRepository extends JpaRepository<KnowledgeDocu
 
     long countByStatus(DocumentStatus status);
 
+    long countByStatusAndAccessLevelIn(DocumentStatus status, Collection<AccessLevel> accessLevels);
+
+    long countByStatusAndOwner(DocumentStatus status, String owner);
+
     long countByNeedsReindexTrueAndStatus(DocumentStatus status);
 
+    long countByNeedsReindexTrueAndStatusAndAccessLevelIn(DocumentStatus status, Collection<AccessLevel> accessLevels);
+
+    long countByIndexingStatus(com.example.knowledgeportal.entity.IndexingStatus indexingStatus);
+
+    long countByIndexingStatusAndAccessLevelIn(com.example.knowledgeportal.entity.IndexingStatus indexingStatus, Collection<AccessLevel> accessLevels);
+
     List<KnowledgeDocument> findByNeedsReindexTrueAndStatus(DocumentStatus status);
+
+    List<KnowledgeDocument> findByNeedsReindexTrueAndStatusAndAccessLevelIn(DocumentStatus status, Collection<AccessLevel> accessLevels);
 
     // SQL Requirement 1: Documents grouped by category and status
     @Query("SELECT d.category, d.status, COUNT(d) FROM KnowledgeDocument d GROUP BY d.category, d.status ORDER BY d.category ASC")
     List<Object[]> countGroupedByCategoryAndStatus();
+
+    @Query("SELECT d.category, d.status, COUNT(d) FROM KnowledgeDocument d WHERE d.accessLevel IN :accessLevels GROUP BY d.category, d.status ORDER BY d.category ASC")
+    List<Object[]> countGroupedByCategoryAndStatusAndAccessLevelIn(@Param("accessLevels") Collection<AccessLevel> accessLevels);
 
     // SQL Requirement 5: Documents accessible to a given role's permitted access levels
     @Query("SELECT d FROM KnowledgeDocument d WHERE d.status = :status AND d.accessLevel IN :accessLevels ORDER BY d.title ASC")

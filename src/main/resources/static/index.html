@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Enterprise Internal Knowledge Portal with AI Research Agent for document search and evidence-based Q&A.">
-    <title>Enterprise Knowledge Portal | AI Research Agent</title>
+    <title>Agivant Knowledge Portal | AI Assistant</title>
+    <link rel="icon" type="image/png" href="images/agivant-logo-gradient.png">
+    <link rel="shortcut icon" type="image/png" href="images/agivant-logo-gradient.png">
+    <link rel="apple-touch-icon" href="images/agivant-logo-gradient.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=12">
 </head>
 <body>
 
@@ -16,142 +19,73 @@
     <!-- DEDICATED AUTHENTICATION PORTAL (VISIBLE WHEN LOGGED OUT) -->
     <!-- =================================================================== -->
     <div id="authScreen" class="auth-screen">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="brand-icon auth-brand-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
+        <div class="auth-aurora-bg">
+            <div class="aurora-orb orb-1"></div>
+            <div class="aurora-orb orb-2"></div>
+            <div class="aurora-orb orb-3"></div>
+        </div>
+        
+        <div class="auth-container modern-luxury-card">
+            <!-- Integrated Brand Header with Agivant Gradient Logo -->
+            <div class="auth-brand-wrap">
+                <div class="brand-agivant-logo-wrap">
+                    <img src="images/agivant-logo-gradient.png" alt="Agivant Logo" class="agivant-brand-logo">
                 </div>
-                <h2>Enterprise Knowledge Portal</h2>
-                <p class="auth-subtitle">Role-Based Access Control &amp; AI Research Gateway</p>
+                <h2 class="auth-portal-title">Agivant Knowledge Portal</h2>
+                <p class="auth-portal-subtitle">Sign in to your enterprise workspace</p>
             </div>
 
             <!-- Auth Error / Notification Banner -->
-            <div id="authAlert" class="auth-alert" style="display: none;">
-                <span id="authAlertText"></span>
+            <div id="authAlert" class="auth-alert-pill" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="alert-pill-icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span id="authAlertText">Invalid username and password.</span>
             </div>
 
-            <!-- Three Authentication Mode Tabs -->
-            <div class="auth-tabs">
-                <button type="button" class="auth-tab-btn active" data-auth-view="employeeLoginView" id="tabEmpLogin">
-                    👤 Employee Login
-                </button>
-                <button type="button" class="auth-tab-btn" data-auth-view="employeeRegisterView" id="tabEmpRegister">
-                    📝 Employee Register
-                </button>
-                <button type="button" class="auth-tab-btn" data-auth-view="adminLoginView" id="tabAdminLogin">
-                    🛡️ Admin Login
-                </button>
-            </div>
-
-            <!-- TAB 1: EMPLOYEE LOGIN -->
-            <div id="employeeLoginView" class="auth-view active">
-                <div class="auth-view-header">
-                    <h3>Employee Portal Sign-In</h3>
-                    <p>Access authorized corporate policies, run semantic search, and consult the AI Research Agent.</p>
-                </div>
-                <form id="formEmployeeLogin" class="auth-form">
-                    <div class="form-group">
-                        <label for="empLoginUser">Username</label>
-                        <input type="text" id="empLoginUser" class="form-input" placeholder="e.g. employee1" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label for="empLoginPass">Password</label>
-                        <input type="password" id="empLoginPass" class="form-input" placeholder="Enter password" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnEmpLoginSubmit">
-                        Sign In as Employee
-                    </button>
-                </form>
-
-                <div class="auth-demo-hint">
-                    <span class="hint-title">💡 Demo Employee:</span>
-                    <button type="button" class="btn-demo-fill" id="btnFillEmpDemo">Fill `employee1` / `password123`</button>
-                </div>
-
-                <div class="auth-switch-prompt">
-                    <span>New team member?</span>
-                    <button type="button" class="btn-link" id="linkToRegister">Register for an employee account &rarr;</button>
-                </div>
-            </div>
-
-            <!-- TAB 2: EMPLOYEE REGISTRATION -->
-            <div id="employeeRegisterView" class="auth-view">
-                <div class="auth-view-header">
-                    <h3>Employee Account Registration</h3>
-                    <p>Create a verified employee account to access company knowledge assets.</p>
-                </div>
-                <form id="formEmployeeRegister" class="auth-form">
-                    <div class="form-group">
-                        <label for="regFullName">Full Name *</label>
-                        <input type="text" id="regFullName" class="form-input" placeholder="e.g. John Doe" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="regUsername">Work Username *</label>
-                        <input type="text" id="regUsername" class="form-input" placeholder="e.g. jdoe" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label for="regPassword">Password * (minimum 4 characters)</label>
-                        <input type="password" id="regPassword" class="form-input" placeholder="Create strong password" required autocomplete="new-password">
-                    </div>
-                    <div class="form-group">
-                        <label for="regConfirmPassword">Confirm Password *</label>
-                        <input type="password" id="regConfirmPassword" class="form-input" placeholder="Re-enter password" required autocomplete="new-password">
-                    </div>
-
-                    <div class="clearance-assignment-badge">
-                        <span class="badge-icon">🏷️</span>
-                        <div>
-                            <strong>Assigned Clearance: ROLE_EMPLOYEE</strong>
-                            <p>Granted access to General Company Policies, FAQs, and AI Research.</p>
+            <!-- Single Unified Login View -->
+            <div id="singleLoginView" class="auth-view active">
+                <form id="formUnifiedLogin" class="luxury-auth-form" autocomplete="off">
+                    <div class="form-group-modern">
+                        <label for="loginUsername">Username</label>
+                        <div class="input-with-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="field-icon">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input type="text" id="loginUsername" class="modern-input" placeholder="Enter your username" required autocomplete="username">
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="btnRegisterSubmit">
-                        Create Employee Account &amp; Sign In
+                    <div class="form-group-modern">
+                        <label for="loginPassword">Password</label>
+                        <div class="input-with-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="field-icon">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="loginPassword" class="modern-input" placeholder="••••••••••••" required autocomplete="current-password">
+                            <button type="button" id="btnTogglePassword" class="btn-toggle-password" title="Show password" aria-label="Show password">
+                                <svg class="eye-icon eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-icon eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-luxury-submit" id="btnLoginSubmit">
+                        <span>Sign In</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
                     </button>
                 </form>
-
-                <div class="auth-switch-prompt">
-                    <span>Already registered?</span>
-                    <button type="button" class="btn-link" id="linkToEmpLogin">&larr; Return to Employee Sign-In</button>
-                </div>
-            </div>
-
-            <!-- TAB 3: ADMIN LOGIN -->
-            <div id="adminLoginView" class="auth-view">
-                <div class="auth-view-header admin-header">
-                    <span class="admin-badge-icon">🛡️</span>
-                    <div>
-                        <h3>Portal Administrator Gateway</h3>
-                        <p>Restricted access for document ingestion, permission management, and system analytics.</p>
-                    </div>
-                </div>
-
-                <div class="admin-warning-banner">
-                    ⚠️ <strong>Restricted Access:</strong> Only accounts with <code>ROLE_ADMIN</code> clearance can access this gateway. Regular employee accounts will be rejected.
-                </div>
-
-                <form id="formAdminLogin" class="auth-form">
-                    <div class="form-group">
-                        <label for="adminLoginUser">Administrator Username</label>
-                        <input type="text" id="adminLoginUser" class="form-input" placeholder="e.g. admin_user" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label for="adminLoginPass">Administrator Password</label>
-                        <input type="password" id="adminLoginPass" class="form-input" placeholder="Enter password" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn btn-admin btn-block btn-lg" id="btnAdminLoginSubmit">
-                        Sign In as Administrator
-                    </button>
-                </form>
-
-                <div class="auth-demo-hint">
-                    <span class="hint-title">🔒 Demo Admin:</span>
-                    <button type="button" class="btn-demo-fill admin-fill" id="btnFillAdminDemo">Fill `admin_user` / `password123`</button>
-                </div>
             </div>
         </div>
     </div>
@@ -161,170 +95,469 @@
     <!-- =================================================================== -->
     <div id="appContainer" style="display: none;">
 
-        <!-- Header & Top Navigation -->
+        <!-- Header & Top Navigation Bar -->
         <header class="app-header">
             <div class="header-container">
                 <div class="brand">
-                    <div class="brand-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    <button type="button" class="btn-sitemap-toggle" id="btnToggleSidebar" title="Toggle Portal Sitemap (Ctrl+B)" aria-label="Toggle Portal Sitemap" aria-expanded="true">
+                        <svg class="toggle-icon-bars" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
+                    </button>
+                    <div class="brand-icon brand-icon-agivant">
+                        <img src="images/agivant-logo-gradient.png" alt="Agivant Logo" class="agivant-nav-logo">
                     </div>
                     <div class="brand-text">
-                        <h1>Enterprise Knowledge Portal</h1>
-                        <span class="brand-subtitle">AI Research Agent &amp; Knowledge Base</span>
+                        <h1 id="portalHeaderTitle">Agivant Knowledge Portal</h1>
+                        <span class="brand-subtitle" id="portalHeaderSubtitle">AI Assistant &amp; Knowledge Base</span>
                     </div>
                 </div>
 
-                <!-- User Context & Role Badge -->
+                <!-- User Profile Section (No access clearance text) -->
                 <div class="user-auth-bar" id="userAuthBar">
                     <div class="user-badge" id="userBadge">
                         <span class="user-avatar" id="userAvatar">A</span>
                         <div class="user-info">
                             <span class="user-name" id="userName">Alice Employee</span>
-                            <div style="display: flex; align-items: center; gap: 0.35rem; margin-top: 2px;">
-                                <span class="badge badge-employee" id="userRoleBadge">ROLE_EMPLOYEE</span>
-                                <span class="user-clearance-pill" id="userClearancePill">Tier 1 Clearance</span>
-                            </div>
+                            <span class="badge badge-employee" id="userRoleBadge">ROLE_EMPLOYEE</span>
                         </div>
                     </div>
                     <button type="button" class="btn-signout" id="btnLogout" title="Sign out of portal">
-                        <span>🚪</span> Sign Out
+                        <svg class="signout-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Sign Out</span>
                     </button>
                 </div>
             </div>
-
-            <!-- Section Navigation Tabs -->
-            <nav class="nav-tabs" aria-label="Main Navigation">
-                <div class="nav-container">
-                    <button class="nav-tab active" data-target="dashboardSection" id="tabDashboard">
-                        <span class="tab-icon">📊</span> Dashboard
-                    </button>
-                    <button class="nav-tab" data-target="searchSection" id="tabSearch">
-                        <span class="tab-icon">🔍</span> Knowledge Search
-                    </button>
-                    <button class="nav-tab" data-target="aiAgentSection" id="tabAiAgent">
-                        <span class="tab-icon">🤖</span> AI Research Agent
-                    </button>
-                    <button class="nav-tab" data-target="documentsSection" id="tabDocuments">
-                        <span class="tab-icon">📁</span> <span id="tabDocumentsLabel">Document Management</span>
-                    </button>
-                    <button class="nav-tab" data-target="feedbackSection" id="tabFeedback">
-                        <span class="tab-icon">⭐</span> Feedback
-                    </button>
-                    <button class="nav-tab" data-target="analyticsSection" id="tabAnalytics">
-                        <span class="tab-icon">📈</span> Analytics
-                    </button>
-                    <button class="nav-tab" data-target="usersSection" id="tabUsers" style="display: none;">
-                        <span class="tab-icon">👥</span> User Directory
-                    </button>
-                </div>
-            </nav>
         </header>
 
-        <!-- Global Notification Banner -->
-        <div id="alertBanner" class="alert-banner" style="display: none;">
-            <span id="alertMessage"></span>
-            <button class="alert-close" id="alertCloseBtn">&times;</button>
-        </div>
+        <!-- Main Portal Workspace Shell with Left Sidebar Sitemap -->
+        <div class="app-workspace" id="appWorkspace">
+            <!-- Left Sidebar Navigation / Sitemap -->
+            <aside class="app-sidebar-sitemap" id="appSidebar">
+                <div class="sitemap-heading-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sitemap-icon">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    <span class="sitemap-label">PORTAL SITEMAP</span>
+                </div>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
+                <nav class="sitemap-nav" aria-label="Portal Navigation Sitemap">
+                    <!-- Group 1: Overview -->
+                    <div class="sitemap-group">
+                        <div class="sitemap-group-title">Overview</div>
+                        <button class="nav-tab active" data-target="dashboardSection" id="tabDashboard">
+                            <svg class="tab-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span class="tab-text">Dashboard</span>
+                        </button>
+                    </div>
+
+                    <!-- Group 2: Knowledge & AI -->
+                    <div class="sitemap-group">
+                        <div class="sitemap-group-title">Knowledge &amp; AI</div>
+                        <button class="nav-tab" data-target="searchSection" id="tabSearch">
+                            <svg class="tab-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <span class="tab-text" id="tabSearchLabel">Search Documents</span>
+                        </button>
+                        <button class="nav-tab" data-target="aiAgentSection" id="tabAiAgent">
+                            <svg class="tab-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2a3 3 0 0 0-3 3v1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3V5a3 3 0 0 0-3-3z"></path>
+                                <circle cx="9" cy="12" r="1"></circle>
+                                <circle cx="15" cy="12" r="1"></circle>
+                                <path d="M10 16h4"></path>
+                            </svg>
+                            <span class="tab-text" id="tabAiAgentLabel">AI Assistant</span>
+                        </button>
+                        <button class="nav-tab" data-target="documentsSection" id="tabDocuments">
+                            <svg class="tab-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span class="tab-text" id="tabDocumentsLabel">Company Documents</span>
+                        </button>
+                    </div>
+
+                    <!-- Group 3: Enterprise Management -->
+                    <div class="sitemap-group" id="sitemapGroupManagement">
+                        <div class="sitemap-group-title">Management</div>
+                        <button class="nav-tab" data-target="employeesSection" id="tabEmployees">
+                            <svg class="tab-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span class="tab-text">Employees Information</span>
+                        </button>
+                        <button class="nav-tab" data-target="feedbackSection" id="tabFeedback">
+                            <svg class="tab-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span class="tab-text">Feedback</span>
+                        </button>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content Viewport -->
+            <div class="app-main-viewport">
+                <!-- Global Notification Banner -->
+                <div id="alertBanner" class="alert-banner" style="display: none;">
+                    <span id="alertMessage"></span>
+                    <button class="alert-close" id="alertCloseBtn">&times;</button>
+                </div>
+
+                <!-- Main Content Area -->
+                <main class="main-content">
 
 
         <!-- =================================================================== -->
         <!-- SCREEN A: DASHBOARD -->
         <!-- =================================================================== -->
         <section id="dashboardSection" class="content-section active">
-            <div class="section-header">
-                <h2>Portal Overview & Metrics</h2>
-                <p class="section-desc">Real-time status of enterprise knowledge assets, feedback ratings, and AI activity.</p>
+            <!-- =============================================================== -->
+            <!-- EMPLOYEE PORTAL VIEW (Standard Employee Dashboard)               -->
+            <!-- =============================================================== -->
+            <div id="employeeDashboardView" class="emp-dashboard-container">
+                <!-- Welcome Banner -->
+                <div class="emp-welcome-banner">
+                    <div class="emp-welcome-text">
+                        <div class="emp-badge-tag">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: -1px; margin-right: 4px;">
+                                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                <path d="M9 22v-4h6v4"></path>
+                                <path d="M8 6h.01"></path>
+                                <path d="M16 6h.01"></path>
+                                <path d="M8 10h.01"></path>
+                                <path d="M16 10h.01"></path>
+                            </svg>
+                            Agivant Knowledge Portal
+                        </div>
+                        <h2 class="emp-welcome-heading">Welcome to Your Knowledge Portal</h2>
+                        <p class="emp-welcome-subtitle">Find trusted company policies, technical guides, and answers to your questions.</p>
+                    </div>
+                    <!-- Simplified Employee Metrics -->
+                    <div class="emp-metrics-strip">
+                        <div class="emp-metric-card" title="Approved documents available to you">
+                            <div class="emp-metric-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="emp-metric-info">
+                                <span class="emp-metric-num" id="empKpiActiveDocs">0</span>
+                                <span class="emp-metric-title">Available Documents</span>
+                            </div>
+                        </div>
+                        <div class="emp-metric-card" title="Average feedback rating on verified answers">
+                            <div class="emp-metric-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                            </div>
+                            <div class="emp-metric-info">
+                                <span class="emp-metric-num" id="empKpiAvgRating">0.0</span>
+                                <span class="emp-metric-title">Average Rating</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links Hub -->
+                <div class="emp-section-block">
+                    <div class="emp-block-header">
+                        <h3>Quick Links</h3>
+                        <p>Easy shortcuts to search documents, ask the AI assistant, or browse company files</p>
+                    </div>
+                    <div class="emp-quick-grid">
+                        <div class="emp-action-tile" id="empActionSearch" role="button" tabindex="0" title="Go to Search Documents">
+                            <div class="emp-tile-icon-wrap emp-tile-search">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </div>
+                            <div class="emp-tile-body">
+                                <div class="emp-tile-header">
+                                    <h4>Search Documents</h4>
+                                    <span class="emp-tile-arrow">&rarr;</span>
+                                </div>
+                                <p>Search company policies, technical guides, and common questions with keyword and relevance ranking.</p>
+                            </div>
+                        </div>
+
+                        <div class="emp-action-tile" id="empActionAi" role="button" tabindex="0" title="Go to AI Assistant">
+                            <div class="emp-tile-icon-wrap emp-tile-ai">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2a3 3 0 0 0-3 3v1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3V5a3 3 0 0 0-3-3z"></path>
+                                    <circle cx="9" cy="12" r="1"></circle>
+                                    <circle cx="15" cy="12" r="1"></circle>
+                                    <path d="M10 16h4"></path>
+                                </svg>
+                            </div>
+                            <div class="emp-tile-body">
+                                <div class="emp-tile-header">
+                                    <h4>AI Assistant</h4>
+                                    <span class="emp-tile-arrow">&rarr;</span>
+                                </div>
+                                <p>Ask natural-language questions and receive answers cited from approved company documents.</p>
+                            </div>
+                        </div>
+
+                        <div class="emp-action-tile" id="empActionDocs" role="button" tabindex="0" title="Go to Company Documents">
+                            <div class="emp-tile-icon-wrap emp-tile-docs">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="emp-tile-body">
+                                <div class="emp-tile-header">
+                                    <h4>Company Documents</h4>
+                                    <span class="emp-tile-arrow">&rarr;</span>
+                                </div>
+                                <p>Browse and read approved documents authorized for your access level.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Browse by Category -->
+                <div class="emp-section-block">
+                    <div class="emp-block-header">
+                        <h3>Browse by Category</h3>
+                        <p>Explore company documentation by topic</p>
+                    </div>
+                    <div class="emp-category-grid">
+                        <div class="emp-cat-card" data-category="POLICY">
+                            <div class="emp-cat-icon">📋</div>
+                            <div class="emp-cat-content">
+                                <h4>Company Policies</h4>
+                                <p>Company rules, leave policies, HR guidelines, security rules, and workplace procedures.</p>
+                                <div class="emp-cat-actions">
+                                    <button type="button" class="emp-cat-btn btn-browse-cat" data-category="POLICY" data-target-sec="documentsSection">View Policies</button>
+                                    <button type="button" class="emp-cat-link btn-search-cat" data-category="POLICY" data-target-sec="searchSection">Search Policies</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="emp-cat-card" data-category="TECHNICAL_RUNBOOK">
+                            <div class="emp-cat-icon">🛠️</div>
+                            <div class="emp-cat-content">
+                                <h4>Technical Guides</h4>
+                                <p>Instructions for using applications, configuring systems, fixing errors, and solving technical problems.</p>
+                                <div class="emp-cat-actions">
+                                    <button type="button" class="emp-cat-btn btn-browse-cat" data-category="TECHNICAL_RUNBOOK" data-target-sec="documentsSection">View Guides</button>
+                                    <button type="button" class="emp-cat-link btn-search-cat" data-category="TECHNICAL_RUNBOOK" data-target-sec="searchSection">Search Guides</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="emp-cat-card" data-category="FAQ">
+                            <div class="emp-cat-icon">💡</div>
+                            <div class="emp-cat-content">
+                                <h4>Common Questions</h4>
+                                <p>Quick answers to frequently asked questions about company tools, processes, and everyday work.</p>
+                                <div class="emp-cat-actions">
+                                    <button type="button" class="emp-cat-btn btn-browse-cat" data-category="FAQ" data-target-sec="documentsSection">View Questions</button>
+                                    <button type="button" class="emp-cat-link btn-search-cat" data-category="FAQ" data-target-sec="searchSection">Search Questions</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Stats KPI Cards -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon icon-blue">📚</div>
-                    <div class="kpi-details">
-                        <span class="kpi-value" id="kpiActiveDocs">0</span>
-                        <span class="kpi-label">Active Documents</span>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon icon-purple">📦</div>
-                    <div class="kpi-details">
-                        <span class="kpi-value" id="kpiArchivedDocs">0</span>
-                        <span class="kpi-label">Archived Documents</span>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon icon-amber">🔄</div>
-                    <div class="kpi-details">
-                        <span class="kpi-value" id="kpiAwaitingReindex">0</span>
-                        <span class="kpi-label">Awaiting Re-indexing</span>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon icon-green">⭐</div>
-                    <div class="kpi-details">
-                        <span class="kpi-value" id="kpiAvgRating">0.0</span>
-                        <span class="kpi-label">Average Satisfaction</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Action Links & Overview Tables -->
-            <div class="dashboard-grid">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Knowledge Asset Breakdown</h3>
-                    </div>
-                    <div class="card-body">
-                        <table class="data-table" id="dashboardCategoryTable">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                    <th>Document Count</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboardCategoryTbody">
-                                <tr><td colspan="3" class="text-center">Loading category statistics...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <!-- =============================================================== -->
+            <!-- ADMINISTRATOR DASHBOARD VIEW (Portal Administrator Only)         -->
+            <!-- =============================================================== -->
+            <div id="adminDashboardView" class="admin-dashboard-container" style="display: none;">
+                <div class="section-header">
+                    <h2>Portal Overview &amp; Metrics</h2>
+                    <p class="section-desc">Real-time status of enterprise knowledge assets, search analytics, and indexing operations.</p>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Frequently Searched Categories</h3>
+                <!-- Stats KPI Cards -->
+                <div class="kpi-grid admin-kpi-grid">
+                    <div class="kpi-card admin-kpi-card" id="adminKpiCardActive" role="button" tabindex="0" title="Click to view Active Documents in Library">
+                        <div class="kpi-icon icon-blue">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-value" id="kpiActiveDocs">0</span>
+                            <span class="kpi-label">Active Documents</span>
+                            <button type="button" class="kpi-action-btn" aria-label="View Active Documents">
+                                <span>View in Library</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <table class="data-table" id="dashboardSearchTable">
-                            <thead>
-                                <tr>
-                                    <th>Category Filter</th>
-                                    <th>Search Inquiries</th>
-                                    <th>Avg Results</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboardSearchTbody">
-                                <tr><td colspan="3" class="text-center">Loading search history...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="kpi-card admin-kpi-card" id="adminKpiCardArchived" role="button" tabindex="0" title="Click to view Archived Documents in Library">
+                        <div class="kpi-icon icon-purple">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                                <rect x="1" y="3" width="22" height="5"></rect>
+                                <line x1="10" y1="12" x2="14" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-value" id="kpiArchivedDocs">0</span>
+                            <span class="kpi-label">Archived Documents</span>
+                            <button type="button" class="kpi-action-btn" aria-label="View Archived Documents">
+                                <span>View archived</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card admin-kpi-card" id="adminKpiCardRating" role="button" tabindex="0" title="Click to inspect User Feedback">
+                        <div class="kpi-icon icon-green">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-value" id="kpiAvgRating">0.0 / 5</span>
+                            <span class="kpi-label">Average Satisfaction</span>
+                            <button type="button" class="kpi-action-btn" aria-label="View feedback logs">
+                                <span>View feedback logs</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Primary Dashboard Grid: Asset Breakdown & Search Analytics -->
+                <div class="dashboard-grid admin-dashboard-grid">
+                    <!-- Knowledge Asset Breakdown Card -->
+                    <div class="card admin-asset-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>Knowledge Asset Breakdown</h3>
+                                <p class="card-subtitle">Active and archived documents categorized by domain</p>
+                            </div>
+                            <span class="badge badge-pill" id="dashboardTotalDocsBadge">0 Total Assets</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Visual Category Distribution Bar -->
+                            <div class="category-distribution-container" id="categoryDistributionContainer">
+                                <div class="distribution-bar-label">
+                                    <span class="dist-label-text">Category Distribution</span>
+                                    <span class="dist-ratio-text" id="distributionRatioText">Loading distribution...</span>
+                                </div>
+                                <div class="distribution-bar" id="categoryDistributionBar">
+                                    <!-- Dynamic segments injected by JS -->
+                                </div>
+                                <div class="distribution-legend" id="categoryDistributionLegend">
+                                    <!-- Dynamic legend injected by JS -->
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="data-table admin-table" id="dashboardCategoryTable">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Category</th>
+                                            <th scope="col" class="text-center">Status</th>
+                                            <th scope="col" class="text-right">Document Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardCategoryTbody">
+                                        <tr><td colspan="3" class="text-center">Loading category statistics...</td></tr>
+                                    </tbody>
+                                    <tfoot id="dashboardCategoryTfoot">
+                                        <!-- Computed total row -->
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Frequently Searched Categories Card -->
+                    <div class="card admin-search-analytics-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>Frequently Searched Categories</h3>
+                                <p class="card-subtitle">Historical query volume and result retrieval metrics</p>
+                            </div>
+                            <span class="badge badge-pill" id="dashboardSearchInquiriesBadge">Total Inquiries</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table admin-table" id="dashboardSearchTable">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Category Filter</th>
+                                            <th scope="col" class="text-center">Search Inquiries</th>
+                                            <th scope="col" class="text-right">Average Results per Search</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardSearchTbody">
+                                        <tr><td colspan="3" class="text-center">Loading search history...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Dashboard Grid: Processing Health & Recent Activity -->
+                <div class="dashboard-grid admin-dashboard-grid" style="margin-top: 1.5rem;">
+                    <!-- Document Processing Health Card -->
+                    <div class="card admin-health-card" id="adminProcessingHealthCard">
+                        <div class="card-header">
+                            <div>
+                                <h3>Document Processing Health</h3>
+                                <p class="card-subtitle">Vector embedding status and index synchronization</p>
+                            </div>
+                            <span class="badge" id="healthStatusBadge">Checking...</span>
+                        </div>
+                        <div class="card-body" id="healthCardBody">
+                            <p class="text-muted">Loading processing health status...</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Knowledge Asset Activity Card -->
+                    <div class="card admin-activity-card" id="adminRecentActivityCard">
+                        <div class="card-header">
+                            <div>
+                                <h3>Recent Knowledge Asset Activity</h3>
+                                <p class="card-subtitle">Latest document uploads, updates, and archives</p>
+                            </div>
+                            <button type="button" class="btn-link-sm" id="btnAdminViewAllDocs">View Library &rarr;</button>
+                        </div>
+                        <div class="card-body" id="recentActivityBody">
+                            <p class="text-muted">Loading recent document activity...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- =================================================================== -->
-        <!-- SCREEN B: KNOWLEDGE SEARCH -->
+        <!-- SCREEN B: SEARCH DOCUMENTS -->
         <!-- =================================================================== -->
         <section id="searchSection" class="content-section">
             <div class="section-header">
-                <h2>Knowledge Base Search</h2>
-                <p class="section-desc">Search approved policies, technical runbooks, and FAQs with transparent relevance scoring.</p>
+                <h2 id="searchSectionHeading">Search Documents</h2>
+                <p id="searchSectionDesc" class="section-desc">Search approved company policies, technical guides, and common questions.</p>
             </div>
 
             <!-- Search Filter Bar -->
@@ -332,20 +565,23 @@
                 <form id="searchForm" class="search-form">
                     <div class="search-input-wrapper">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Enter keywords (e.g., annual leave, severity 1 incident, monitor stipend)..." required>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search by keywords (e.g., annual leave, system guide, remote work)..." required autocomplete="off">
+                        <button type="button" id="searchClearInputBtn" class="search-clear-btn" aria-label="Clear search text" title="Clear search text">&times;</button>
                     </div>
                     <div class="filter-controls">
                         <select id="searchCategorySelect" class="form-select">
                             <option value="">All Categories</option>
-                            <option value="POLICY">Policy</option>
-                            <option value="TECHNICAL_RUNBOOK">Technical Runbook</option>
-                            <option value="FAQ">FAQ</option>
+                            <option value="POLICY">Company Policies</option>
+                            <option value="TECHNICAL_RUNBOOK">Technical Guides</option>
+                            <option value="FAQ">Common Questions</option>
+                            <option value="OTHER">Other / Custom Categories</option>
                         </select>
                         <select id="searchStatusSelect" class="form-select">
-                            <option value="ACTIVE">Active Documents</option>
+                            <option value="ACTIVE">Available Documents</option>
                             <option value="ARCHIVED">Archived Documents</option>
                         </select>
                         <button type="submit" class="btn btn-primary" id="searchSubmitBtn">Search</button>
+                        <button type="button" class="btn btn-secondary" id="searchResetBtn" title="Reset search text and filters">Reset</button>
                     </div>
                 </form>
             </div>
@@ -353,11 +589,11 @@
             <!-- Search Results Container -->
             <div id="searchLoading" class="loading-state" style="display: none;">
                 <div class="spinner"></div>
-                <p>Retrieving and scoring matching document chunks...</p>
+                <p>Searching documents...</p>
             </div>
 
             <div id="searchMetaBar" class="search-meta-bar" style="display: none;">
-                <span id="searchResultCountText">0 results found</span>
+                <span id="searchResultCountText">0 matching documents found</span>
             </div>
 
             <div id="searchResultsList" class="search-results-list">
@@ -366,152 +602,142 @@
         </section>
 
         <!-- =================================================================== -->
-        <!-- SCREEN C: AI RESEARCH AGENT Q&A -->
+        <!-- SCREEN C: AI ASSISTANT Q&A (CONVERSATIONAL VIEW + SITEMAP)         -->
         <!-- =================================================================== -->
         <section id="aiAgentSection" class="content-section">
-            <div class="section-header">
-                <h2>AI Research Agent</h2>
-                <p class="section-desc">Goal-driven agent workflow: Evidence Retrieval &rarr; Sufficiency Validation &rarr; Citation Synthesis.</p>
-            </div>
-
-            <div class="ai-prompt-card card">
-                <form id="aiAskForm">
-                    <div class="form-group">
-                        <label for="aiQuestionInput">Ask an enterprise question:</label>
-                        <textarea id="aiQuestionInput" class="form-textarea" rows="3" placeholder="e.g. How many days of annual leave are available? Or: What is the protocol for Severity 1 downtime and who is notified?" required></textarea>
-                    </div>
-                    <div class="ai-submit-row">
-                        <div class="sample-questions">
-                            <span class="sample-label">Try sample queries:</span>
-                            <button type="button" class="btn-chip" data-query="How many days of annual leave are available?">Leave Entitlement</button>
-                            <button type="button" class="btn-chip" data-query="What is the war room protocol for Severity 1 incidents?">Severity 1 Runbook</button>
-                            <button type="button" class="btn-chip" data-query="What is the allowance for remote work monitors and what are the leave rules?">Multi-Document Query</button>
-                            <button type="button" class="btn-chip" data-query="What is the recipe for making Italian pasta carbonara?">Unrelated (Test Abstention)</button>
-                            <button type="button" class="btn-chip" data-query="What are the confidential executive bonuses?">Restricted Check</button>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-lg" id="aiSubmitBtn">
-                            <span>Ask Agent</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Agent Loading State -->
-            <div id="aiLoading" class="loading-state" style="display: none;">
-                <div class="spinner"></div>
-                <p>Agent executing tool workflow: searching authorized documents, retrieving passages, and validating citations...</p>
-            </div>
-
-            <!-- Agent Response Container (Redesigned & Organized) -->
-            <div id="aiResponseContainer" class="ai-response-container" style="display: none;">
-                <div class="card response-card">
-                    <!-- Top Status & Mode Bar -->
-                    <div class="response-header">
-                        <div class="response-title">
-                            <span class="ai-avatar-pulse">🤖</span>
+            <div class="chat-layout-container">
+                <!-- MAIN / LEFT: Interactive Conversational Chat Area -->
+                <div class="chat-main-area">
+                    <!-- Top Chat Header Bar -->
+                    <div class="chat-main-header">
+                        <div class="chat-agent-info">
+                            <div class="chat-agent-avatar">
+                                <img src="images/agivant-logo-gradient.png" alt="Agivant AI" class="chat-avatar-img">
+                                <span class="chat-online-dot" title="AI Agent Active & Online"></span>
+                            </div>
                             <div>
-                                <h3 id="responseCardTitle">AI Research Findings</h3>
-                                <span class="response-question-subtitle" id="responseQuestionSubtitle"></span>
-                            </div>
-                        </div>
-                        <div class="response-badges">
-                            <span id="aiModeBadge" class="badge badge-mode">SIMULATION</span>
-                            <span id="aiAbstainedBadge" class="badge badge-success">VERIFIED EVIDENCE</span>
-                            <span id="citationCountBadge" class="badge badge-pill">0 Sources</span>
-                        </div>
-                    </div>
-
-                    <!-- Sub-tabs for switching between Answer, Evidence Sources, and Security Audit -->
-                    <div class="ai-view-tabs">
-                        <button type="button" class="ai-view-tab active" data-subview="answerView" id="tabViewAnswer">
-                            ✨ Direct Answer &amp; Key Points
-                        </button>
-                        <button type="button" class="ai-view-tab" data-subview="evidenceView" id="tabViewEvidence">
-                            📚 Verified Evidence Passages (<span id="evidenceTabCount">0</span>)
-                        </button>
-                        <button type="button" class="ai-view-tab" data-subview="auditView" id="tabViewAudit">
-                            🛡️ Security &amp; Workflow Audit
-                        </button>
-                    </div>
-
-                    <!-- SUB-VIEW 1: Synthesized Direct Answer -->
-                    <div id="answerView" class="ai-subview active">
-                        <div class="answer-banner">
-                            <div class="answer-banner-icon">💡</div>
-                            <div class="answer-banner-text">
-                                <strong>Synthesized Response</strong>
-                                <span>Based strictly on verified enterprise documentation accessible to your clearance level.</span>
+                                <div class="chat-title-row">
+                                    <h3 id="aiSectionHeading">Agivant AI Assistant</h3>
+                                    <span class="chat-badge-rag">Enterprise RAG</span>
+                                </div>
+                                <p class="chat-subtitle" id="aiSectionDesc">Multi-document evidence synthesis with verified citations and clearance isolation</p>
                             </div>
                         </div>
 
-                        <!-- Rich Formatted Answer Body -->
-                        <div id="aiAnswerContent" class="ai-answer-rich">
-                            <!-- Injected structured HTML -->
+                        <div class="chat-header-actions">
+                            <button type="button" class="btn-chat-primary" id="btnNewChat" title="Start a fresh conversation">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>New Chat</span>
+                            </button>
+                            <button type="button" class="btn-chat-ghost btn-toggle-sitemap" id="btnToggleChatSitemap" title="Toggle Conversations Sitemap">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                <span class="toggle-sitemap-text">Conversations</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Messages Container -->
+                    <div class="chat-messages-container" id="chatMessagesScroll">
+                        <div class="chat-messages-stream" id="chatMessagesStream">
+                            <!-- Messages or Welcome State injected dynamically by JS -->
                         </div>
 
-                        <!-- Action Toolbar -->
-                        <div class="answer-action-toolbar">
-                            <div class="action-buttons-left">
-                                <button type="button" class="btn btn-secondary btn-sm" id="btnCopyAnswer">
-                                    📋 Copy Answer
+                        <!-- Typing indicator -->
+                        <div id="chatTypingIndicator" class="chat-typing-row" style="display: none;">
+                            <div class="chat-msg-avatar assistant-avatar">
+                                <img src="images/agivant-logo-gradient.png" alt="Agivant AI" class="avatar-mini">
+                            </div>
+                            <div class="typing-bubble">
+                                <div class="typing-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <span class="typing-text">Searching company documents and synthesizing answer...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suggestion Chips Bar -->
+                    <div class="chat-chips-bar" id="chatChipsBar">
+                        <span class="chips-label">Suggestions:</span>
+                        <div class="chips-scroll-wrap">
+                            <button type="button" class="chat-chip" data-query="Give me the data about me like my name, work location, and department">My Profile</button>
+                            <button type="button" class="chat-chip" data-query="How many leaves did I have?">My Leaves</button>
+                            <button type="button" class="chat-chip" data-query="Tell me how many technical guides are there?">Guides Count</button>
+                            <button type="button" class="chat-chip" data-query="What is the carry-over policy for annual leave?">Leave Policy</button>
+                            <button type="button" class="chat-chip" data-query="What is the allowance for remote work monitors?">Remote Work</button>
+                            <button type="button" class="chat-chip" data-query="What is the incident management runbook procedure?">Incident Runbook</button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Chat Input Bar -->
+                    <div class="chat-input-area">
+                        <form id="chatMessageForm" class="chat-input-form">
+                            <div class="chat-input-box">
+                                <textarea id="chatInputText" class="chat-textarea" rows="1" placeholder="Ask a question about policies, procedures, or company knowledge... (Press Enter to send)" required></textarea>
+                                <button type="submit" class="chat-send-btn" id="btnChatSend" title="Send question">
+                                    <span>Send</span>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
                                 </button>
-                                <button type="button" class="btn btn-secondary btn-sm" id="btnInspectEvidence">
-                                    🔍 View Supporting Passages
-                                </button>
                             </div>
-                            <div class="action-buttons-right">
-                                <button type="button" class="btn btn-primary btn-sm" id="btnQuickFeedback">
-                                    ⭐ Submit Quality Rating
-                                </button>
-                            </div>
+                        </form>
+                        <div class="chat-input-disclaimer">
+                            Agivant AI synthesizes approved documents within your clearance level. All answers provide verifiable citations.
                         </div>
                     </div>
-
-                    <!-- SUB-VIEW 2: Verified Evidence Passages -->
-                    <div id="evidenceView" class="ai-subview">
-                        <div class="evidence-intro-bar">
-                            <p>Below are the exact verbatim passages retrieved from your organization's approved documents that substantiate this answer:</p>
-                        </div>
-                        <div class="evidence-cards-stack" id="citationsGrid">
-                            <!-- Evidence passage cards injected here -->
-                        </div>
-                    </div>
-
-                    <!-- SUB-VIEW 3: Security & Verification Audit -->
-                    <div id="auditView" class="ai-subview">
-                        <div class="audit-grid">
-                            <div class="audit-card">
-                                <div class="audit-icon success">🛡️</div>
-                                <div>
-                                    <h4>Access Clearance Isolation</h4>
-                                    <p id="auditClearanceText">Clearance validated in Java services. Restricted HR and ADMIN documents were isolated before retrieval.</p>
-                                </div>
-                            </div>
-                            <div class="audit-card">
-                                <div class="audit-icon success">🔒</div>
-                                <div>
-                                    <h4>Prompt-Injection Defense</h4>
-                                    <p>Uploaded passages treated as untrusted reference data. Malicious instruction overrides are scanned and defused.</p>
-                                </div>
-                            </div>
-                            <div class="audit-card">
-                                <div class="audit-icon success">📑</div>
-                                <div>
-                                    <h4>Citation Verifiability</h4>
-                                    <p>All citations cross-referenced with active document chunk IDs and versions in the MySQL repository.</p>
-                                </div>
-                            </div>
-                            <div class="audit-card">
-                                <div class="audit-icon info">⚙️</div>
-                                <div>
-                                    <h4>Execution Mode &amp; Orchestration</h4>
-                                    <p id="aiReasoningNotes">Prototype simulation mode: Deterministic extractive synthesis from retrieved passages.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
+
+                <!-- RIGHT SIDE: Conversations Sitemap Panel -->
+                <aside class="chat-sitemap-panel" id="chatSitemapPanel">
+                    <div class="chat-sitemap-header">
+                        <div class="sitemap-title-wrap">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sitemap-icon">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <h4>Conversations Sitemap</h4>
+                        </div>
+                        <span class="badge badge-pill" id="chatHistoryCountBadge">0</span>
+                    </div>
+
+                    <!-- Active User Identifier Strip in Sitemap -->
+                    <div class="chat-sitemap-user-bar">
+                        <div class="sitemap-user-badge">
+                            <span class="user-avatar-tiny" id="sitemapUserAvatar">A</span>
+                            <div class="sitemap-user-text">
+                                <strong id="sitemapUserName">User</strong>
+                                <span id="sitemapUserRole">ROLE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search within conversation history -->
+                    <div class="chat-sitemap-search">
+                        <div class="sitemap-search-wrap">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="chatHistorySearchInput" class="sitemap-search-input" placeholder="Search conversations...">
+                        </div>
+                    </div>
+
+                    <!-- Dynamic List of Past Conversations -->
+                    <div class="chat-sitemap-list" id="chatSitemapList">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+
+                    <!-- Sitemap Footer Actions -->
+                    <div class="chat-sitemap-footer">
+                        <button type="button" class="btn-clear-history-sidebar" id="btnClearChatHistory">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>Clear Conversation History</span>
+                        </button>
+                    </div>
+                </aside>
             </div>
         </section>
 
@@ -520,8 +746,8 @@
         <!-- =================================================================== -->
         <section id="documentsSection" class="content-section">
             <div class="section-header">
-                <h2>Document Management</h2>
-                <p class="section-desc">Upload, segment, re-index, and safely archive approved enterprise documents.</p>
+                <h2 id="documentsSectionHeading">Company Documents</h2>
+                <p id="documentsSectionDesc" class="section-desc">Browse and view approved company policies, technical guides, and common questions.</p>
             </div>
 
             <!-- Employee Read-Only Clearance Notice -->
@@ -529,9 +755,9 @@
                 <div class="card-body" style="display: flex; align-items: center; gap: 1.25rem; background: #f8fafc; padding: 1.25rem;">
                     <span style="font-size: 2.2rem; flex-shrink: 0;">📚</span>
                     <div>
-                        <h4 style="margin: 0 0 0.25rem 0; color: var(--primary);">Enterprise Document Library (Employee Access)</h4>
+                        <h4 style="margin: 0 0 0.25rem 0; color: var(--primary);">Company Documents (Employee Access)</h4>
                         <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
-                            You have verified employee clearance to browse, filter, and inspect all approved company policies and guidelines. Document uploading, segmentation ingestion, and archival are restricted to Portal Administrators.
+                            Browse and read approved company policies, technical guides, and common questions. Document uploading and management are handled by administrators.
                         </p>
                     </div>
                 </div>
@@ -555,7 +781,12 @@
                                     <option value="POLICY">Policy</option>
                                     <option value="TECHNICAL_RUNBOOK">Technical Runbook</option>
                                     <option value="FAQ">FAQ</option>
+                                    <option value="OTHER">Other</option>
                                 </select>
+                            </div>
+                            <div class="form-group" id="uploadCustomCategoryGroup" style="display: none;">
+                                <label for="uploadCustomCategory">Enter Category Name *</label>
+                                <input type="text" id="uploadCustomCategory" class="form-input" placeholder="e.g. Compliance, Security Guidelines, Employee Benefits">
                             </div>
                             <div class="form-group">
                                 <label for="uploadAccessLevel">Access Clearance Level *</label>
@@ -577,9 +808,12 @@
                             <input type="text" id="uploadDescription" class="form-input" placeholder="Brief summary of document purpose and scope">
                         </div>
 
-                        <div class="form-actions">
+                        <div class="form-actions" style="display: flex; gap: 0.75rem; align-items: center;">
                             <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">
                                 <span>Upload and Index Document</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="uploadResetBtn">
+                                <span>Clear Form</span>
                             </button>
                         </div>
                     </form>
@@ -589,16 +823,20 @@
             <!-- Filter & Document List Table -->
             <div class="card">
                 <div class="card-header doc-table-header">
-                    <h3>Accessible Enterprise Documents</h3>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <h3 id="docTableHeaderTitle">Available Company Documents</h3>
+                        <span class="badge badge-pill" id="docTableCountBadge">0 Available</span>
+                    </div>
                     <div class="table-filters">
                         <select id="docListCategoryFilter" class="form-select-sm">
                             <option value="">All Categories</option>
-                            <option value="POLICY">Policy</option>
-                            <option value="TECHNICAL_RUNBOOK">Technical Runbook</option>
-                            <option value="FAQ">FAQ</option>
+                            <option value="POLICY">Company Policies</option>
+                            <option value="TECHNICAL_RUNBOOK">Technical Guides</option>
+                            <option value="FAQ">Common Questions</option>
+                            <option value="OTHER">Other / Custom Categories</option>
                         </select>
                         <select id="docListStatusFilter" class="form-select-sm">
-                            <option value="ACTIVE">Active</option>
+                            <option value="ACTIVE">Available</option>
                             <option value="ARCHIVED">Archived</option>
                         </select>
                         <button class="btn btn-secondary btn-sm" id="btnRefreshDocs">Refresh</button>
@@ -612,16 +850,17 @@
                                     <th>ID</th>
                                     <th>Title</th>
                                     <th>Category</th>
-                                    <th>Clearance</th>
+                                    <th>Access Level</th>
                                     <th>Version</th>
-                                    <th>Status</th>
-                                    <th>Chunks</th>
-                                    <th>Updated At</th>
+                                    <th>Lifecycle</th>
+                                    <th>Indexing</th>
+                                    <th>Sections</th>
+                                    <th>Last Updated</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="documentsTableTbody">
-                                <tr><td colspan="9" class="text-center">Loading documents...</td></tr>
+                                <tr><td colspan="10" class="text-center">Loading documents...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -630,57 +869,325 @@
         </section>
 
         <!-- =================================================================== -->
-        <!-- SCREEN E: FEEDBACK -->
+        <!-- SCREEN E: FEEDBACK MANAGEMENT (ADMIN & HR) -->
         <!-- =================================================================== -->
         <section id="feedbackSection" class="content-section">
             <div class="section-header">
-                <h2>Answer Quality Feedback</h2>
-                <p class="section-desc">Submit ratings and observations on AI generated answers to improve retrieval accuracy.</p>
+                <h2>Feedback Management</h2>
+                <p class="section-desc">Administrative review of employee ratings, feedback comments, answer references, and cited source documents.</p>
             </div>
 
-            <div class="card feedback-card">
-                <form id="feedbackForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="feedbackDocSelect">Target Document *</label>
-                            <select id="feedbackDocSelect" class="form-select" required>
-                                <option value="">Select an accessible document...</option>
+            <!-- Feedback Summary KPIs -->
+            <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                <div class="kpi-card admin-kpi-card" id="fbKpiCardTotal">
+                    <div class="kpi-icon icon-blue">📋</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="fbKpiTotalSubmissions">0</span>
+                        <span class="kpi-label">Total Submissions</span>
+                        <span class="kpi-action-hint">Persisted user feedback</span>
+                    </div>
+                </div>
+                <div class="kpi-card admin-kpi-card" id="fbKpiCardAverage">
+                    <div class="kpi-icon icon-green">⭐</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="fbKpiAverageRating">0.0 / 5</span>
+                        <span class="kpi-label">Average Satisfaction</span>
+                        <span class="kpi-action-hint">Calculated rating</span>
+                    </div>
+                </div>
+                <div class="kpi-card admin-kpi-card" id="fbKpiCardPositive">
+                    <div class="kpi-icon icon-green">👍</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="fbKpiPositiveCount">0</span>
+                        <span class="kpi-label">Positive Ratings (4-5★)</span>
+                        <span class="kpi-action-hint" id="fbKpiPositiveRatio">0% positive</span>
+                    </div>
+                </div>
+                <div class="kpi-card admin-kpi-card" id="fbKpiCardLow">
+                    <div class="kpi-icon icon-amber">⚠️</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="fbKpiLowCount">0</span>
+                        <span class="kpi-label">Needs Attention (1-2★)</span>
+                        <span class="kpi-action-hint">Low satisfaction</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rating Distribution & Filter Toolbar -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h3>Rating Distribution (1 to 5 Stars)</h3>
+                        <p class="card-subtitle">Breakdown of satisfaction ratings from active employees</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshFeedback">
+                        🔄 Refresh Data
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Distribution Visual Bars -->
+                    <div id="fbDistributionBarsContainer" style="display: flex; flex-direction: column; gap: 0.6rem; max-width: 600px; margin-bottom: 1.25rem;">
+                        <!-- Injected dynamically by JS -->
+                    </div>
+
+                    <!-- Search and Filter Bar -->
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <div style="flex: 1; min-width: 240px;">
+                            <input type="text" id="fbSearchInput" class="form-input" placeholder="Search question, comment, submitter, answer ref, or doc...">
+                        </div>
+                        <div style="width: 190px;">
+                            <select id="fbRatingFilter" class="form-select">
+                                <option value="">All Ratings (1-5 Stars)</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                                <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                                <option value="3">⭐⭐⭐ (3 Stars)</option>
+                                <option value="2">⭐⭐ (2 Stars)</option>
+                                <option value="1">⭐ (1 Star)</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="feedbackAnswerRef">Answer Reference Identifier *</label>
-                            <input type="text" id="feedbackAnswerRef" class="form-input" value="ANS-MANUAL-REVIEW" required>
+                        <div>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnFilterFeedback">
+                                🔍 Search
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btnClearFeedbackFilter" style="margin-left: 0.35rem;">
+                                Clear
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="form-group">
-                        <label for="feedbackQuestion">Inquiry / Question Text *</label>
-                        <input type="text" id="feedbackQuestion" class="form-input" placeholder="e.g. How many days of annual leave are available?" required>
+            <!-- Feedback Submissions Table -->
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <h3>Feedback Records</h3>
+                        <p class="card-subtitle">Real-time log of questions, ratings, comments, and cited source documents</p>
                     </div>
-
-                    <div class="form-group">
-                        <label>Satisfaction Rating (1 to 5 Stars) *</label>
-                        <div class="star-rating" id="starRatingGroup">
-                            <button type="button" class="star-btn" data-value="1">★</button>
-                            <button type="button" class="star-btn" data-value="2">★</button>
-                            <button type="button" class="star-btn" data-value="3">★</button>
-                            <button type="button" class="star-btn" data-value="4">★</button>
-                            <button type="button" class="star-btn active" data-value="5">★</button>
-                        </div>
-                        <input type="hidden" id="feedbackRatingValue" value="5">
+                    <span class="badge badge-pill" id="fbFilteredCountBadge">0 Submissions</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table admin-table" id="feedbackManagementTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 110px;">Rating</th>
+                                    <th>Question</th>
+                                    <th>Comment</th>
+                                    <th>Source Document</th>
+                                    <th>Answer Reference</th>
+                                    <th>Submitted By</th>
+                                    <th>Date</th>
+                                    <th style="width: 90px; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feedbackTableTbody">
+                                <tr><td colspan="8" class="text-center">Loading feedback records...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="form-group">
-                        <label for="feedbackComment">Comments / Suggestions</label>
-                        <textarea id="feedbackComment" class="form-textarea" rows="3" placeholder="Provide context regarding accuracy, missing details, or citation quality..."></textarea>
+                    <!-- Empty State -->
+                    <div id="feedbackEmptyState" style="display: none; padding: 3rem 1.5rem; text-align: center; color: var(--text-muted);">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
+                        <h4 style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 0.35rem;" id="feedbackEmptyHeading">No feedback submitted yet.</h4>
+                        <p style="font-size: 0.88rem; max-width: 450px; margin: 0 auto;" id="feedbackEmptySub">As employees ask questions and rate AI answers on the AI Assistant page, persisted records and ratings will appear here.</p>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="feedbackSubmitBtn">Submit Feedback</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN E: EMPLOYEES INFORMATION & LEAVE DIRECTORY                  -->
+        <!-- =================================================================== -->
+        <section id="employeesSection" class="content-section">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2>Employees Information &amp; Leave Overview</h2>
+                    <p class="section-desc">Unified employee directory, company profiles, and company-to-employee leave &amp; attendance tracking.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnOpenAddEmployee">
+                        ➕ Add Employee
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshEmployees">
+                        🔄 Refresh Directory
+                    </button>
+                </div>
+            </div>
+
+            <!-- 1. Employee Management KPI Cards -->
+            <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                <div class="kpi-card admin-kpi-card">
+                    <div class="kpi-icon icon-blue">👥</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="empKpiTotalCount">0</span>
+                        <span class="kpi-label">Total Employees</span>
+                        <span class="kpi-action-hint">Active personnel records</span>
+                    </div>
+                </div>
+                <div class="kpi-card admin-kpi-card">
+                    <div class="kpi-icon icon-green">🏖️</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="empKpiApprovedLeaves">0</span>
+                        <span class="kpi-label">Approved Leaves</span>
+                        <span class="kpi-action-hint">Days taken in 2026</span>
+                    </div>
+                </div>
+                <div class="kpi-card admin-kpi-card">
+                    <div class="kpi-icon icon-amber">⏳</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="empKpiPendingRequests">0</span>
+                        <span class="kpi-label">Pending Requests</span>
+                        <span class="kpi-action-hint">Awaiting HR/Admin review</span>
+                    </div>
+                </div>
+                <div class="kpi-card admin-kpi-card">
+                    <div class="kpi-icon icon-purple">🏡</div>
+                    <div class="kpi-details">
+                        <span class="kpi-value" id="empKpiWfhDaysUsed">0</span>
+                        <span class="kpi-label">WFH Days Utilized</span>
+                        <span class="kpi-action-hint">Remote work days logged</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Search & Department Filter Toolbar -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-body" style="padding: 1.25rem;">
+                    <div style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: center;">
+                        <div style="flex: 2; min-width: 340px; position: relative;">
+                            <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; font-size: 1rem;">🔍</span>
+                            <input type="text" id="empSearchInput" class="form-input" placeholder="Search by employee name, code, designation, or department..." style="width: 100%; padding-left: 2.5rem; height: 42px; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 1; min-width: 220px; max-width: 280px;">
+                            <select id="empDepartmentFilter" class="form-select" style="width: 100%; height: 42px; box-sizing: border-box;">
+                                <option value="ALL">All Departments</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Human Resources">Human Resources</option>
+                                <option value="Administration">Administration</option>
+                                <option value="Finance">Finance &amp; Accounts</option>
+                                <option value="Product">Product &amp; Design</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Sales">Sales &amp; Business Dev</option>
+                                <option value="Operations">Operations &amp; Logistics</option>
+                                <option value="Legal">Legal &amp; Compliance</option>
+                                <option value="Support">Customer Support</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                            <button type="button" class="btn btn-primary" id="btnFilterEmployees" style="height: 42px; display: inline-flex; align-items: center; justify-content: center;">
+                                🔍 Filter
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="btnClearEmployeeFilter" style="height: 42px; display: inline-flex; align-items: center; justify-content: center;">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Sub-Tabs Navigation for Employee Information Sections -->
+            <div class="employee-tabs-nav" id="employeeTabsNav">
+                <button type="button" class="emp-subtab-btn active" data-emp-tab="empTabLeavesPanel" id="btnEmpTabLeaves">
+                    <span class="emp-subtab-icon">🏖️</span>
+                    <span>Leave &amp; Work Allowances</span>
+                    <span class="badge badge-pill badge-subtab" id="empTabLeavesBadge">0</span>
+                </button>
+                <button type="button" class="emp-subtab-btn" data-emp-tab="empTabDirectoryPanel" id="btnEmpTabDirectory">
+                    <span class="emp-subtab-icon">👥</span>
+                    <span>Employee Directory</span>
+                    <span class="badge badge-pill badge-subtab" id="empTabDirectoryBadge">0</span>
+                </button>
+                <button type="button" class="emp-subtab-btn" data-emp-tab="empTabApplicationsPanel" id="btnEmpTabApplications">
+                    <span class="emp-subtab-icon">📋</span>
+                    <span>Recent Applications</span>
+                    <span class="badge badge-pill badge-subtab" id="empTabApplicationsBadge">0</span>
+                </button>
+            </div>
+
+            <!-- Tab Panel 1: Company to Employee Leave Allowances & Balances Table -->
+            <div class="emp-tab-panel active" id="empTabLeavesPanel">
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h3>Company to Employee Leave &amp; Work Allowances (2026)</h3>
+                            <p class="card-subtitle">Real-time view of Planned, Casual, Sick, WFH, and Comp Off balances per employee</p>
+                        </div>
+                        <span class="badge badge-pill" id="empLeavesTableBadge">0 Records</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table employee-leaves-table" id="employeeLeavesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Department &amp; Role</th>
+                                        <th class="text-center">Annual Leave</th>
+                                        <th class="text-center">Casual Leave</th>
+                                        <th class="text-center">Sick Leave</th>
+                                        <th class="text-center">WFH Allowance</th>
+                                        <th class="text-center">Comp Off</th>
+                                        <th class="text-center">Leave Requests</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeLeavesTbody">
+                                    <tr><td colspan="9" class="text-center">Loading employee leave data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Panel 2: Employee Directory (Company Information Cards) -->
+            <div class="emp-tab-panel" id="empTabDirectoryPanel" style="display: none;">
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Employee Directory &amp; Company Profiles</h3>
+                        <p class="card-subtitle">Official personnel records, email contacts, work locations, and security clearance levels</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="employee-card-grid" id="employeeProfilesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+                            <!-- Employee directory cards injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Panel 3: Leave Applications Breakdown -->
+            <div class="emp-tab-panel" id="empTabApplicationsPanel" style="display: none;">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h3>Recent Leave &amp; WFH Applications</h3>
+                            <p class="card-subtitle">Detailed audit of all employee leave applications, reasons, and approval status</p>
+                        </div>
+                        <span class="badge badge-pill" id="empApplicationsCountBadge">0 Applications</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table" id="employeeLeaveRequestsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Leave Type</th>
+                                        <th>Dates / Duration</th>
+                                        <th>Days</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeLeaveRequestsTbody">
+                                    <tr><td colspan="6" class="text-center">Loading leave requests...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         <!-- =================================================================== -->
         <!-- SCREEN F: ANALYTICS -->
@@ -811,7 +1318,142 @@
             </div>
         </section>
 
+        <!-- =================================================================== -->
+        <!-- SCREEN H: AUDIT LOGS (ADMIN ONLY) -->
+        <!-- =================================================================== -->
+        <section id="auditLogsSection" class="content-section">
+            <div class="section-header">
+                <h2>Security &amp; Operational Audit Logs</h2>
+                <p class="section-desc">Immutable audit trail of document ingestions, updates, re-indexes, archives, and security events.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header doc-table-header">
+                    <h3>Recent System Audit Events</h3>
+                    <button class="btn btn-secondary btn-sm" id="btnRefreshAuditLogs">🔄 Refresh Audit Logs</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table" id="auditLogsTable">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Actor</th>
+                                    <th>Action</th>
+                                    <th>Resource Type</th>
+                                    <th>Resource ID</th>
+                                    <th>Outcome</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsTableTbody">
+                                <tr><td colspan="7" class="text-center">Loading audit events...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN I: PROCESSING JOBS & PIPELINE HEALTH (ADMIN ONLY) -->
+        <!-- =================================================================== -->
+        <section id="processingJobsSection" class="content-section">
+            <div class="section-header">
+                <h2>Document Processing Pipeline Jobs</h2>
+                <p class="section-desc">Track real-time indexing pipeline executions, inspect failure logs, and execute safe retries.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header doc-table-header">
+                    <h3>Processing Job Queue &amp; History</h3>
+                    <button class="btn btn-secondary btn-sm" id="btnRefreshProcessingJobs">🔄 Refresh Jobs</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table" id="processingJobsTable">
+                            <thead>
+                                <tr>
+                                    <th>Job ID</th>
+                                    <th>Document</th>
+                                    <th>Version</th>
+                                    <th>Operation</th>
+                                    <th>Status</th>
+                                    <th>Retries</th>
+                                    <th>Started At</th>
+                                    <th>Completed At</th>
+                                    <th>Error / Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="processingJobsTableTbody">
+                                <tr><td colspan="10" class="text-center">Loading processing jobs...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================================================================== -->
+        <!-- SCREEN J: SYSTEM SETTINGS (ADMIN ONLY) -->
+        <!-- =================================================================== -->
+        <section id="systemSettingsSection" class="content-section">
+            <div class="section-header">
+                <h2>System Settings &amp; Engine Configuration</h2>
+                <p class="section-desc">Active AI provider, search retrieval pipeline, upload constraints, and security safeguards.</p>
+            </div>
+
+            <div class="dashboard-grid admin-dashboard-grid">
+                <!-- AI Engine Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🤖 AI Model &amp; Orchestration</h3>
+                        <span class="badge" id="settingsAiStatusBadge">Checking...</span>
+                    </div>
+                    <div class="card-body" id="settingsAiBody">
+                        <p class="text-muted">Loading AI configuration...</p>
+                    </div>
+                </div>
+
+                <!-- Search & Retrieval Engine Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔍 Search &amp; Retrieval Engine</h3>
+                        <span class="badge badge-success">✓ Active</span>
+                    </div>
+                    <div class="card-body" id="settingsSearchBody">
+                        <p class="text-muted">Loading search configuration...</p>
+                    </div>
+                </div>
+
+                <!-- Ingestion & File Constraints Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📄 Ingestion &amp; Content Validation</h3>
+                        <span class="badge badge-success">✓ Enforced</span>
+                    </div>
+                    <div class="card-body" id="settingsIngestionBody">
+                        <p class="text-muted">Loading ingestion constraints...</p>
+                    </div>
+                </div>
+
+                <!-- Security & Access Control Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🛡️ Access Control &amp; Injection Defense</h3>
+                        <span class="badge badge-success">✓ Active</span>
+                    </div>
+                    <div class="card-body" id="settingsSecurityBody">
+                        <p class="text-muted">Loading security configuration...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
+            </div> <!-- End app-main-viewport -->
+        </div> <!-- End app-workspace -->
     </div> <!-- End appContainer -->
 
     <!-- =================================================================== -->
@@ -838,7 +1480,317 @@
         </div>
     </div>
 
+    <!-- =================================================================== -->
+    <!-- MODAL: FULL DOCUMENT READER (EMPLOYEE PORTAL)                       -->
+    <!-- =================================================================== -->
+    <div id="fullDocumentModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 920px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 1.25rem 1.5rem;">
+                <div style="flex: 1; min-width: 0; padding-right: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <h3 id="fullDocTitle" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Document Title</h3>
+                        <span id="fullDocTypeBadge" class="badge badge-mode">TXT</span>
+                        <span id="fullDocCategoryBadge" class="badge badge-success">Company Policy</span>
+                        <span id="fullDocStatusBadge" class="badge badge-active">Active</span>
+                        <span id="fullDocVersionBadge" class="badge badge-pill" style="font-size: 0.75rem; background: #f1f5f9; color: var(--text-secondary); border: 1px solid var(--border-color);">v1</span>
+                    </div>
+                    <div id="fullDocMeta" class="modal-meta" style="margin-top: 0.35rem;">
+                        Author: Suganthi Mani • Access: Employee Access
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <a id="fullDocOpenTabBtn" href="#" target="_blank" class="btn btn-secondary btn-sm" title="Open complete document in new tab">
+                        ↗ Open in New Tab
+                    </a>
+                    <button class="modal-close" id="fullDocCloseBtn" title="Close document reader">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body" id="fullDocBody" style="flex: 1; padding: 1.25rem; overflow-y: auto; min-height: 420px; max-height: 75vh;">
+                <!-- Full Document Content (PDF iframe or readable text) -->
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.5rem; border-top: 1px solid var(--border-color); background: #fafbfd;">
+                <span class="clearance-tag" id="fullDocClearanceTag">✓ Access Clearance Verified</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="fullDocDismissBtn">Close Reader</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: DOCUMENT VERSION HISTORY                                     -->
+    <!-- =================================================================== -->
+    <div id="versionHistoryModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 820px; width: 95%;">
+            <div class="modal-header">
+                <div>
+                    <h3 id="versionModalDocTitle">Document Version History</h3>
+                    <span class="modal-meta" id="versionModalDocMeta">Snapshot history across document updates and re-indexes</span>
+                </div>
+                <button class="modal-close" id="versionModalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.25rem; max-height: 70vh; overflow-y: auto;">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>File Name</th>
+                                <th>Clearance</th>
+                                <th>Passages</th>
+                                <th>Change Summary</th>
+                                <th>Created By</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="versionHistoryTbody">
+                            <tr><td colspan="7" class="text-center">Loading version history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" id="versionModalDismissBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: FEEDBACK DETAILS INSPECTION (ADMIN & HR)                     -->
+    <!-- =================================================================== -->
+    <div id="feedbackDetailsModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 720px; width: 95%;">
+            <div class="modal-header">
+                <div>
+                    <h3 id="fbModalTitle">Inspect Feedback Submission</h3>
+                    <span class="modal-meta" id="fbModalMeta">Interaction and citation inspection</span>
+                </div>
+                <button type="button" class="modal-close" id="fbModalCloseBtn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; max-height: 70vh; overflow-y: auto;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Rating & Submitter</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span id="fbModalRatingStars" style="font-size: 1.2rem; color: #f59e0b;"></span>
+                            <span id="fbModalRatingNum" style="font-weight: 700; font-size: 0.95rem;"></span>
+                            <span style="color: var(--text-muted);">•</span>
+                            <span id="fbModalSubmitter" style="font-weight: 600; color: var(--text-primary);"></span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Submission Date</span>
+                        <span id="fbModalDate" style="font-size: 0.88rem; font-weight: 500;"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.04em;">Question Asked</label>
+                    <div id="fbModalQuestion" style="padding: 0.65rem 0.85rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 500; margin-top: 0.25rem;"></div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.04em;">Feedback Comment</label>
+                    <div id="fbModalComment" style="padding: 0.65rem 0.85rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 0.25rem;"></div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.04em;">Generated AI Answer</label>
+                    <div id="fbModalAnswerText" style="padding: 0.75rem 1rem; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9rem; line-height: 1.6; max-height: 220px; overflow-y: auto; margin-top: 0.25rem;"></div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.04em;">Associated Source Document</label>
+                    <div id="fbModalDocDetails" style="padding: 0.65rem 0.85rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9rem; margin-top: 0.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                        <span id="fbModalDocInfo">No document associated (Direct answer / abstention).</span>
+                        <button type="button" class="btn btn-secondary btn-sm" id="fbModalViewDocBtn" style="display: none;">
+                            📖 Read Document
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.5rem; border-top: 1px solid var(--border-color); background: #fafbfd;">
+                <span class="modal-meta" id="fbModalAnswerRefTag">Ref: ANS-...</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="fbModalDismissBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Full Details Modal -->
+    <div id="employeeDetailsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="empModalTitle" style="display: none;">
+        <div class="modal-container" style="max-width: 850px; width: 95%;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fafbfd;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <span style="font-size: 1.8rem;" id="empModalAvatar">👤</span>
+                    <div>
+                        <h3 id="empModalTitle" style="margin: 0; font-size: 1.25rem;">Employee Profile &amp; Leaves</h3>
+                        <span id="empModalSubtitle" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" id="btnEmpModalClose" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body" id="empModalBody" style="padding: 1.5rem; max-height: 75vh; overflow-y: auto;">
+                <!-- Injected dynamically by JS -->
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fafbfd;">
+                <span id="empModalFooterMeta" style="font-size: 0.85rem; color: var(--text-muted);">Verified Internal Record</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnEmpModalDismiss">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: ADD NEW EMPLOYEE (ADMIN & HR)                                -->
+    <!-- =================================================================== -->
+    <div id="addEmployeeModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="addEmpModalTitle" style="display: none;">
+        <div class="modal-container" style="max-width: 820px; width: 95%;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fafbfd;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <div class="emp-avatar-circle" style="width: 42px; height: 42px; font-size: 1.1rem; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;">
+                        ➕
+                    </div>
+                    <div>
+                        <h3 id="addEmpModalTitle" style="margin: 0; font-size: 1.25rem;">Add New Employee</h3>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Register employee credentials and corporate directory profile</span>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" id="btnAddEmpModalClose" aria-label="Close modal">&times;</button>
+            </div>
+            <form id="addEmployeeForm">
+                <div class="modal-body" style="padding: 1.5rem; max-height: 75vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+                    
+                    <!-- 1. Login Credentials Group -->
+                    <div class="form-group-card">
+                        <div class="form-group-card-header">
+                            <span class="badge badge-admin">Sign-In Credentials</span>
+                            <span class="form-group-card-desc">The employee will use these credentials to log into the portal.</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
+                            <div class="form-group">
+                                <label for="newEmpUsername" class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" id="newEmpUsername" class="form-input" placeholder="e.g. rahul.sharma" required autocomplete="off">
+                                <span class="form-help-text">Lowercase alphanumeric (used to sign in)</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpPassword" class="form-label">Initial Password <span class="text-danger">*</span></label>
+                                <input type="text" id="newEmpPassword" class="form-input" placeholder="e.g. EmployeePass2026!" required autocomplete="new-password">
+                                <span class="form-help-text">Minimum 4 characters</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpRole" class="form-label">System Role <span class="text-danger">*</span></label>
+                                <select id="newEmpRole" class="form-select" required>
+                                    <option value="ROLE_EMPLOYEE" selected>Employee (Standard User)</option>
+                                    <option value="ROLE_HR">HR Manager</option>
+                                    <option value="ROLE_ADMIN">Portal Administrator</option>
+                                </select>
+                                <span class="form-help-text">Determines system permissions</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Profile Details Group -->
+                    <div class="form-group-card">
+                        <div class="form-group-card-header">
+                            <span class="badge badge-primary">Corporate Profile</span>
+                            <span class="form-group-card-desc">Company information and work details.</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
+                            <div class="form-group">
+                                <label for="newEmpFullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" id="newEmpFullName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpEmail" class="form-label">Corporate Email</label>
+                                <input type="email" id="newEmpEmail" class="form-input" placeholder="e.g. rahul.sharma@company.internal">
+                                <span class="form-help-text">Auto-filled if left empty</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpCode" class="form-label">Employee Code</label>
+                                <input type="text" id="newEmpCode" class="form-input" placeholder="e.g. EMP-1005 (auto if blank)">
+                                <span class="form-help-text">Leave blank to auto-generate</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpDepartment" class="form-label">Department <span class="text-danger">*</span></label>
+                                <select id="newEmpDepartment" class="form-select" required>
+                                    <option value="" disabled selected>Select Department...</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Human Resources">Human Resources</option>
+                                    <option value="Administration">Administration</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Product">Product</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Legal">Legal</option>
+                                    <option value="Support">Support</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpDesignation" class="form-label">Designation / Role Title <span class="text-danger">*</span></label>
+                                <input type="text" id="newEmpDesignation" class="form-input" placeholder="e.g. Senior Software Engineer" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpLocation" class="form-label">Work Location</label>
+                                <input type="text" id="newEmpLocation" class="form-input" placeholder="e.g. Chennai Office (Hybrid)">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="newEmpManager" class="form-label">Reporting Manager</label>
+                                <input type="text" id="newEmpManager" class="form-input" placeholder="e.g. Ashwin Mani">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Initial Leave Allocations Group -->
+                    <div class="form-group-card">
+                        <div class="form-group-card-header">
+                            <span class="badge badge-success">Initial Leave Allocation (2026)</span>
+                            <span class="form-group-card-desc">Standard corporate defaults are pre-filled; customize as needed.</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
+                            <div class="form-group">
+                                <label for="newEmpPlanned" class="form-label">Annual Leave</label>
+                                <input type="number" id="newEmpPlanned" class="form-input text-center" value="25" min="0" max="60">
+                                <span class="form-help-text text-center">Days/yr</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpCasual" class="form-label">Casual Leave</label>
+                                <input type="number" id="newEmpCasual" class="form-input text-center" value="6" min="0" max="30">
+                                <span class="form-help-text text-center">Days/yr</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpSick" class="form-label">Sick Leave</label>
+                                <input type="number" id="newEmpSick" class="form-input text-center" value="10" min="0" max="30">
+                                <span class="form-help-text text-center">Days/yr</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpWfh" class="form-label">WFH Days</label>
+                                <input type="number" id="newEmpWfh" class="form-input text-center" value="24" min="0" max="100">
+                                <span class="form-help-text text-center">Days/yr</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="newEmpCompOff" class="form-label">Comp Off</label>
+                                <input type="number" id="newEmpCompOff" class="form-input text-center" value="0" min="0" max="30">
+                                <span class="form-help-text text-center">Initial Bal</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fafbfd;">
+                    <span style="font-size: 0.82rem; color: var(--text-muted);">
+                        🔒 Employee account will be immediately active for portal login
+                    </span>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnAddEmpModalCancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm" id="btnAddEmpSubmit">
+                            ✓ Save &amp; Create Employee
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Application JavaScript -->
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=12"></script>
+
 </body>
 </html>

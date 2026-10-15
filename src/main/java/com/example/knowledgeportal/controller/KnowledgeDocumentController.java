@@ -6,6 +6,7 @@ import com.example.knowledgeportal.entity.AccessLevel;
 import com.example.knowledgeportal.entity.DocumentCategory;
 import com.example.knowledgeportal.entity.DocumentStatus;
 import com.example.knowledgeportal.service.KnowledgeDocumentService;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,11 +38,12 @@ public class KnowledgeDocumentController {
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam("category") DocumentCategory category,
+            @RequestParam(value = "customCategory", required = false) String customCategory,
             @RequestParam("accessLevel") AccessLevel accessLevel,
             Authentication authentication) {
 
         DocumentResponse response = documentService.uploadAndIndexDocument(
-                file, title, description, category, accessLevel, authentication
+                file, title, description, category, customCategory, accessLevel, authentication
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -88,6 +90,18 @@ public class KnowledgeDocumentController {
     }
 
     /**
+     * Stream or download the complete original document file.
+     * Enforces document access security clearance.
+     */
+    @GetMapping("/{id}/file")
+    public ResponseEntity<Resource> getDocumentFile(
+            @PathVariable("id") Long id,
+            Authentication authentication) {
+
+        return documentService.getDocumentFile(id, authentication);
+    }
+
+    /**
      * Re-index an existing document.
      */
     @PutMapping("/{id}/reindex")
@@ -100,7 +114,7 @@ public class KnowledgeDocumentController {
     }
 
     /**
-     * Safely archive a document (soft delete).
+     * Safely archive a document (soft delete) - Supports DELETE or POST /archive.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<DocumentResponse> archiveDocument(
@@ -109,5 +123,59 @@ public class KnowledgeDocumentController {
 
         DocumentResponse response = documentService.archiveDocument(id, authentication);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/archive")
+    public ResponseEntity<DocumentResponse> archiveDocumentPost(
+            @PathVariable("id") Long id,
+            Authentication authentication) {
+
+        DocumentResponse response = documentService.archiveDocument(id, authentication);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Restore an archived document back to ACTIVE status.
+     */
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<DocumentResponse> restoreDocument(
+            @PathVariable("id") Long id,
+            Authentication authentication) {
+
+        DocumentResponse response = documentService.restoreDocument(id, authentication);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Update document metadata and/or replace document file with automatic version increment.
+     */
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DocumentResponse> updateDocument(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "category", required = false) DocumentCategory category,
+            @RequestParam(value = "customCategory", required = false) String customCategory,
+            @RequestParam(value = "accessLevel", required = false) AccessLevel accessLevel,
+            Authentication authentication) {
+
+        DocumentResponse response = documentService.updateDocument(
+                id, file, title, description, category, customCategory, accessLevel, authentication
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieve version history audit trail for a document.
+     */
+    @GetMapping("/{id}/versions")
+    public ResponseEntity<List<com.example.knowledgeportal.entity.DocumentVersion>> getDocumentVersions(
+            @PathVariable("id") Long id,
+            Authentication authentication) {
+
+        List<com.example.knowledgeportal.entity.DocumentVersion> versions =
+                documentService.getDocumentVersions(id, authentication);
+        return ResponseEntity.ok(versions);
     }
 }

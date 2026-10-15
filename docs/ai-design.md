@@ -45,8 +45,8 @@ The application supports dual execution modes seamlessly configured through envi
 | Feature | `REAL_AI` Mode | `SIMULATION` Mode |
 | :--- | :--- | :--- |
 | **Activation Condition** | `AI_API_KEY` is provided in `.env` / properties | Default when `AI_API_KEY` is omitted or empty |
-| **Model Provider** | OpenAI-compatible endpoint (`gpt-4o-mini`, etc.) | Local deterministic Java extractive synthesizer |
-| **Latency** | 1.0s – 3.5s (network dependent) | < 25ms (instantaneous) |
+| **Model Provider** | Google Gemini API (`gemini-2.5-flash`) / Optional OpenAI | Local deterministic Java extractive synthesizer |
+| **Latency** | 0.8s – 2.0s (network dependent) | < 25ms (instantaneous) |
 | **External Dependencies**| Outbound HTTPS internet access | 100% offline, zero external dependencies |
 | **Labeling** | Explicitly flagged in UI & API as `REAL_AI` | Explicitly flagged in UI & API as `SIMULATION` |
 | **Timeout Handling** | Falls back to `SIMULATION_FALLBACK` | N/A |

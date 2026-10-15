@@ -7,6 +7,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * DataInitializer ensures default test accounts, approved policy documents,
  * and chunks are seeded if the database is initially empty.
@@ -19,6 +25,10 @@ public class DataInitializer implements CommandLineRunner {
     private final KnowledgeChunkRepository chunkRepository;
     private final KnowledgeFeedbackRepository feedbackRepository;
     private final SearchHistoryRepository searchHistoryRepository;
+    private final EmployeeProfileRepository profileRepository;
+    private final EmployeeLeaveRecordRepository leaveRecordRepository;
+    private final EmployeeLeaveRequestRepository leaveRequestRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(UserAccountRepository userRepository,
@@ -26,12 +36,20 @@ public class DataInitializer implements CommandLineRunner {
                            KnowledgeChunkRepository chunkRepository,
                            KnowledgeFeedbackRepository feedbackRepository,
                            SearchHistoryRepository searchHistoryRepository,
+                           EmployeeProfileRepository profileRepository,
+                           EmployeeLeaveRecordRepository leaveRecordRepository,
+                           EmployeeLeaveRequestRepository leaveRequestRepository,
+                           ChatMessageRepository chatMessageRepository,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.feedbackRepository = feedbackRepository;
         this.searchHistoryRepository = searchHistoryRepository;
+        this.profileRepository = profileRepository;
+        this.leaveRecordRepository = leaveRecordRepository;
+        this.leaveRequestRepository = leaveRequestRepository;
+        this.chatMessageRepository = chatMessageRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -39,16 +57,219 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         seedUsersIfEmpty();
+        seedEmployeeDataIfEmpty();
+        syncExistingEmployeeNames();
         seedDocumentsIfEmpty();
+        syncExistingDocumentIndexingStatus();
+        backfillChatConversations();
+    }
+
+    private void backfillChatConversations() {
+        try {
+            List<ChatMessage> allMessages = chatMessageRepository.findAll();
+            if (allMessages == null || allMessages.isEmpty()) {
+                return;
+            }
+            Map<String, List<ChatMessage>> byUser = allMessages.stream()
+                    .collect(Collectors.groupingBy(ChatMessage::getUsername));
+
+            for (Map.Entry<String, List<ChatMessage>> entry : byUser.entrySet()) {
+                List<ChatMessage> msgs = entry.getValue();
+                msgs.sort(Comparator.comparing(ChatMessage::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())));
+
+                String currentConvId = null;
+                LocalDateTime lastTime = null;
+
+                for (ChatMessage msg : msgs) {
+                    if (msg.getConversationId() != null && !msg.getConversationId().trim().isEmpty()) {
+                        currentConvId = msg.getConversationId().trim();
+                        lastTime = msg.getCreatedAt();
+                        continue;
+                    }
+                    if (currentConvId != null && lastTime != null && msg.getCreatedAt() != null
+                            && Duration.between(lastTime, msg.getCreatedAt()).toMinutes() <= 15) {
+                        msg.setConversationId(currentConvId);
+                    } else {
+                        long ts = msg.getCreatedAt() != null ? msg.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() : System.currentTimeMillis();
+                        currentConvId = "conv_" + ts + "_" + msg.getId();
+                        msg.setConversationId(currentConvId);
+                    }
+                    lastTime = msg.getCreatedAt();
+                    chatMessageRepository.save(msg);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Note on chat conversation backfill: " + e.getMessage());
+        }
+    }
+
+    private void syncExistingEmployeeNames() {
+        userRepository.findAll().forEach(u -> {
+            if ("Arthur Administrator".equalsIgnoreCase(u.getFullName()) || "Arthur".equalsIgnoreCase(u.getFullName())) {
+                u.setFullName("Ashwin Mani");
+                userRepository.save(u);
+            } else if ("Helen HR Manager".equalsIgnoreCase(u.getFullName()) || "Helen".equalsIgnoreCase(u.getFullName())) {
+                u.setFullName("Suganthi Mani");
+                userRepository.save(u);
+            }
+        });
+
+        profileRepository.findByUsername("admin_user").ifPresent(p -> {
+            p.setFullName("Ashwin Mani");
+            profileRepository.save(p);
+        });
+        profileRepository.findByUsername("hr_user").ifPresent(p -> {
+            p.setFullName("Suganthi Mani");
+            profileRepository.save(p);
+        });
+        for (EmployeeProfile p : profileRepository.findAll()) {
+            boolean changed = false;
+            if ("Arthur Administrator".equalsIgnoreCase(p.getReportingManager()) || "Arthur".equalsIgnoreCase(p.getReportingManager())) {
+                p.setReportingManager("Ashwin Mani");
+                changed = true;
+            }
+            if ("Arthur Administrator".equalsIgnoreCase(p.getFullName()) || "Arthur".equalsIgnoreCase(p.getFullName())) {
+                p.setFullName("Ashwin Mani");
+                changed = true;
+            } else if ("Helen HR Manager".equalsIgnoreCase(p.getFullName()) || "Helen".equalsIgnoreCase(p.getFullName())) {
+                p.setFullName("Suganthi Mani");
+                changed = true;
+            }
+            if (changed) {
+                profileRepository.save(p);
+            }
+        }
+
+        for (KnowledgeDocument doc : documentRepository.findAll()) {
+            boolean changed = false;
+            if ("Arthur Administrator".equalsIgnoreCase(doc.getOwner()) || "Arthur".equalsIgnoreCase(doc.getOwner())) {
+                doc.setOwner("Ashwin Mani");
+                changed = true;
+            } else if ("Helen HR Manager".equalsIgnoreCase(doc.getOwner()) || "Helen".equalsIgnoreCase(doc.getOwner())) {
+                doc.setOwner("Suganthi Mani");
+                changed = true;
+            }
+            if (changed) {
+                documentRepository.save(doc);
+            }
+        }
+    }
+
+    private void syncExistingDocumentIndexingStatus() {
+        for (KnowledgeDocument doc : documentRepository.findAll()) {
+            int chunks = chunkRepository.findByDocumentIdAndDocumentVersion(doc.getId(), doc.getVersion()).size();
+            if (chunks > 0 && doc.getIndexingStatus() != IndexingStatus.INDEXED) {
+                doc.setIndexingStatus(IndexingStatus.INDEXED);
+                documentRepository.save(doc);
+            }
+        }
     }
 
     private void seedUsersIfEmpty() {
-        if (userRepository.count() == 0) {
-            String encodedPassword = passwordEncoder.encode("password123");
+        String encodedPassword = passwordEncoder.encode("password123");
 
+        userRepository.findByUsernameIgnoreCase("aswini").ifPresentOrElse(u -> {
+            u.setUsername("aswini");
+            u.setPassword(encodedPassword);
+            u.setFullName("Aswini Mani");
+            userRepository.save(u);
+        }, () -> {
+            userRepository.save(new UserAccount("aswini", encodedPassword, "Aswini Mani", UserRole.ROLE_EMPLOYEE));
+        });
+
+        userRepository.findByUsernameIgnoreCase("employee1").ifPresentOrElse(u -> {
+            u.setPassword(encodedPassword);
+            userRepository.save(u);
+        }, () -> {
             userRepository.save(new UserAccount("employee1", encodedPassword, "Alice Employee", UserRole.ROLE_EMPLOYEE));
-            userRepository.save(new UserAccount("hr_user", encodedPassword, "Helen HR Manager", UserRole.ROLE_HR));
-            userRepository.save(new UserAccount("admin_user", encodedPassword, "Arthur Administrator", UserRole.ROLE_ADMIN));
+        });
+
+        userRepository.findByUsernameIgnoreCase("hr_user").ifPresentOrElse(u -> {
+            u.setPassword(encodedPassword);
+            u.setFullName("Suganthi Mani");
+            userRepository.save(u);
+        }, () -> {
+            userRepository.save(new UserAccount("hr_user", encodedPassword, "Suganthi Mani", UserRole.ROLE_HR));
+        });
+
+        userRepository.findByUsernameIgnoreCase("admin_user").ifPresentOrElse(u -> {
+            u.setPassword(encodedPassword);
+            u.setFullName("Ashwin Mani");
+            userRepository.save(u);
+        }, () -> {
+            userRepository.save(new UserAccount("admin_user", encodedPassword, "Ashwin Mani", UserRole.ROLE_ADMIN));
+        });
+    }
+
+    private void seedEmployeeDataIfEmpty() {
+        if (profileRepository.count() == 0) {
+            // 1. Employee Profiles
+            profileRepository.save(new EmployeeProfile(
+                    "aswini", "EMP-1001", "Aswini Mani", "aswini@company.internal",
+                    "Engineering", "Senior Software Engineer", java.time.LocalDate.of(2023, 1, 15),
+                    "Chennai (Hybrid)", "Ashwin Mani", AccessLevel.EMPLOYEE
+            ));
+            profileRepository.save(new EmployeeProfile(
+                    "employee1", "EMP-1002", "Alice Employee", "alice@company.internal",
+                    "Engineering", "Software Engineer", java.time.LocalDate.of(2023, 6, 1),
+                    "Bangalore Tech Hub", "Ashwin Mani", AccessLevel.EMPLOYEE
+            ));
+            profileRepository.save(new EmployeeProfile(
+                    "hr_user", "EMP-1003", "Suganthi Mani", "suganthi.hr@company.internal",
+                    "Human Resources", "HR Operations Lead", java.time.LocalDate.of(2022, 3, 10),
+                    "Chennai Office", "Ashwin Mani", AccessLevel.HR
+            ));
+            profileRepository.save(new EmployeeProfile(
+                    "admin_user", "EMP-1000", "Ashwin Mani", "admin@company.internal",
+                    "Administration", "Principal IT Administrator", java.time.LocalDate.of(2021, 8, 1),
+                    "Headquarters", "Board of Directors", AccessLevel.ADMIN
+            ));
+
+            // 2. Employee Leave Records (2026)
+            leaveRecordRepository.save(new EmployeeLeaveRecord(
+                    "aswini", 2026, 25, 7, 6, 1, 10, 0, 24, 8, 3, 1, 8, 1
+            ));
+            leaveRecordRepository.save(new EmployeeLeaveRecord(
+                    "employee1", 2026, 25, 5, 6, 2, 10, 2, 24, 12, 2, 0, 7, 0
+            ));
+            leaveRecordRepository.save(new EmployeeLeaveRecord(
+                    "hr_user", 2026, 25, 10, 6, 3, 10, 1, 24, 6, 4, 2, 13, 0
+            ));
+            leaveRecordRepository.save(new EmployeeLeaveRecord(
+                    "admin_user", 2026, 25, 4, 6, 0, 10, 0, 24, 4, 5, 1, 5, 0
+            ));
+
+            // 3. Employee Leave Requests
+            leaveRequestRepository.save(new EmployeeLeaveRequest(
+                    "aswini", "Aswini Mani", "Planned Leave",
+                    java.time.LocalDate.of(2026, 10, 20), java.time.LocalDate.of(2026, 10, 21),
+                    2, "Family travel and personal commitment", "PENDING"
+            ));
+            leaveRequestRepository.save(new EmployeeLeaveRequest(
+                    "aswini", "Aswini Mani", "Casual Leave",
+                    java.time.LocalDate.of(2026, 9, 12), java.time.LocalDate.of(2026, 9, 12),
+                    1, "Personal emergency", "APPROVED"
+            ));
+            leaveRequestRepository.save(new EmployeeLeaveRequest(
+                    "aswini", "Aswini Mani", "Planned Leave",
+                    java.time.LocalDate.of(2026, 7, 7), java.time.LocalDate.of(2026, 7, 11),
+                    5, "Summer annual leave", "APPROVED"
+            ));
+            leaveRequestRepository.save(new EmployeeLeaveRequest(
+                    "aswini", "Aswini Mani", "Work From Home (WFH)",
+                    java.time.LocalDate.of(2026, 8, 1), java.time.LocalDate.of(2026, 8, 8),
+                    8, "Remote sprint delivery", "APPROVED"
+            ));
+            leaveRequestRepository.save(new EmployeeLeaveRequest(
+                    "employee1", "Alice Employee", "Sick Leave",
+                    java.time.LocalDate.of(2026, 5, 15), java.time.LocalDate.of(2026, 5, 16),
+                    2, "Medical recovery", "APPROVED"
+            ));
+            leaveRequestRepository.save(new EmployeeLeaveRequest(
+                    "employee1", "Alice Employee", "Planned Leave",
+                    java.time.LocalDate.of(2026, 6, 10), java.time.LocalDate.of(2026, 6, 14),
+                    5, "Mid-year vacation", "APPROVED"
+            ));
         }
     }
 

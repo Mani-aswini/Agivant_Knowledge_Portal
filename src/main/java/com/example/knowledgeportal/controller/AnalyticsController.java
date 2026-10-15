@@ -27,8 +27,8 @@ public class AnalyticsController {
     }
 
     @GetMapping
-    public ResponseEntity<AnalyticsResponse> getAnalytics() {
-        return ResponseEntity.ok(analyticsService.getAnalyticsDashboard());
+    public ResponseEntity<AnalyticsResponse> getAnalytics(Authentication authentication) {
+        return ResponseEntity.ok(analyticsService.getAnalyticsDashboard(authentication));
     }
 
     @GetMapping("/role-access")

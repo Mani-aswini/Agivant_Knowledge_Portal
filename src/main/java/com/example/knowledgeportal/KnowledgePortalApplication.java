@@ -25,8 +25,30 @@ public class KnowledgePortalApplication {
     private static final Logger log = LoggerFactory.getLogger(KnowledgePortalApplication.class);
 
     public static void main(String[] args) {
+        sanitizeEnvironmentProperties();
         loadDotEnvIfPresent();
         SpringApplication.run(KnowledgePortalApplication.class, args);
+    }
+
+    /**
+     * Sanitizes critical environment variables to strip accidental carriage returns,
+     * newlines, or trailing whitespace introduced when copying values into hosting providers like Render.
+     */
+    public static void sanitizeEnvironmentProperties() {
+        String[] keys = {"DB_URL", "DB_USERNAME", "DB_PASSWORD", "PORT", "AI_API_KEY"};
+        for (String key : keys) {
+            String val = System.getenv(key);
+            if (val != null) {
+                String[] lines = val.split("[\\r\\n]+");
+                for (String line : lines) {
+                    String cleaned = line.trim();
+                    if (!cleaned.isEmpty()) {
+                        System.setProperty(key, cleaned);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     /**

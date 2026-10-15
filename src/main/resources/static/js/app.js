@@ -4166,10 +4166,57 @@ function switchEmployeeSubtab(targetPanelId) {
     });
 }
 
+function showAddEmpModalAlert(message, type = 'danger') {
+    const alertEl = document.getElementById('addEmpModalAlert');
+    const msgEl = document.getElementById('addEmpModalAlertMessage');
+    const modalBody = document.querySelector('#addEmployeeModal .modal-body');
+    if (alertEl && msgEl) {
+        alertEl.className = `alert-banner alert-${type}`;
+        alertEl.style.border = type === 'danger' ? '1px solid #fecaca' : '1px solid #a7f3d0';
+        alertEl.style.display = 'flex';
+        msgEl.textContent = message;
+        if (modalBody) {
+            modalBody.scrollTop = 0;
+        }
+    } else {
+        showAlert(message, type);
+    }
+}
+
+function hideAddEmpModalAlert() {
+    const alertEl = document.getElementById('addEmpModalAlert');
+    if (alertEl) {
+        alertEl.style.display = 'none';
+    }
+}
+
+function highlightAddEmpErrorField(fieldId) {
+    clearAddEmpFieldErrors();
+    const el = document.getElementById(fieldId);
+    if (el) {
+        el.style.borderColor = '#ef4444';
+        el.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+        el.focus();
+    }
+}
+
+function clearAddEmpFieldErrors() {
+    const fieldIds = ['newEmpUsername', 'newEmpPassword', 'newEmpFullName', 'newEmpDepartment', 'newEmpDesignation', 'newEmpManager'];
+    fieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.borderColor = '';
+            el.style.boxShadow = '';
+        }
+    });
+}
+
 function openAddEmployeeModal() {
     const modal = document.getElementById('addEmployeeModal');
     const form = document.getElementById('addEmployeeForm');
     if (form) form.reset();
+    hideAddEmpModalAlert();
+    clearAddEmpFieldErrors();
 
     const plannedInput = document.getElementById('newEmpPlanned');
     const casualInput = document.getElementById('newEmpCasual');
@@ -4193,6 +4240,8 @@ function openAddEmployeeModal() {
 function closeAddEmployeeModal() {
     const modal = document.getElementById('addEmployeeModal');
     if (modal) modal.style.display = 'none';
+    hideAddEmpModalAlert();
+    clearAddEmpFieldErrors();
 }
 
 function initAddEmployeeModal() {
@@ -4202,10 +4251,12 @@ function initAddEmployeeModal() {
     const form = document.getElementById('addEmployeeForm');
     const usernameInput = document.getElementById('newEmpUsername');
     const emailInput = document.getElementById('newEmpEmail');
+    const alertCloseBtn = document.getElementById('addEmpModalAlertClose');
     let emailManuallyEdited = false;
 
     if (closeBtn) closeBtn.addEventListener('click', closeAddEmployeeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeAddEmployeeModal);
+    if (alertCloseBtn) alertCloseBtn.addEventListener('click', hideAddEmpModalAlert);
 
     if (modal) {
         modal.addEventListener('click', (e) => {
@@ -4238,6 +4289,11 @@ function initAddEmployeeModal() {
     }
 
     if (form) {
+        form.addEventListener('input', () => {
+            hideAddEmpModalAlert();
+            clearAddEmpFieldErrors();
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('btnAddEmpSubmit');
@@ -4262,63 +4318,68 @@ function initAddEmployeeModal() {
 
             // 1. Basic Required Fields Check
             if (!username || !password || !fullName || !department || !designation) {
-                showAlert('Please fill in all required fields marked with *', 'danger');
+                showAddEmpModalAlert('Please fill in all required fields marked with *', 'danger');
+                if (!username) highlightAddEmpErrorField('newEmpUsername');
+                else if (!password) highlightAddEmpErrorField('newEmpPassword');
+                else if (!fullName) highlightAddEmpErrorField('newEmpFullName');
+                else if (!department) highlightAddEmpErrorField('newEmpDepartment');
+                else if (!designation) highlightAddEmpErrorField('newEmpDesignation');
                 return;
             }
 
             // 2. Full Name Validation (No numbers, alphabetic characters only, min 2 letters)
             if (/\d/.test(fullName)) {
-                showAlert('Full Name cannot contain numbers. Only alphabetic letters, spaces, and valid name characters are permitted.', 'danger');
-                document.getElementById('newEmpFullName')?.focus();
+                showAddEmpModalAlert('Full Name cannot contain numbers. Only alphabetic letters, spaces, and valid name characters are permitted.', 'danger');
+                highlightAddEmpErrorField('newEmpFullName');
                 return;
             }
             if (!/^(?=.*[a-zA-Z].*[a-zA-Z])[a-zA-Z\s.'-]+$/.test(fullName)) {
-                showAlert('Full Name must contain at least 2 alphabetic letters and cannot be numbers or symbols only.', 'danger');
-                document.getElementById('newEmpFullName')?.focus();
+                showAddEmpModalAlert('Full Name must contain at least 2 alphabetic letters and cannot be numbers or symbols only.', 'danger');
+                highlightAddEmpErrorField('newEmpFullName');
                 return;
             }
 
             // 3. Username Validation (Lowercase alphanumeric, starts with letter, no spaces or numbers-only)
             if (/[A-Z]/.test(username)) {
-                showAlert('Username must be lowercase letters only (e.g. rahul.sharma).', 'danger');
-                document.getElementById('newEmpUsername')?.focus();
+                showAddEmpModalAlert('Username must be lowercase letters only (e.g. rahul.sharma).', 'danger');
+                highlightAddEmpErrorField('newEmpUsername');
                 return;
             }
             if (/^\d+$/.test(username) || !/^[a-z]/.test(username)) {
-                showAlert('Username must start with a lowercase letter and cannot be numbers only.', 'danger');
-                document.getElementById('newEmpUsername')?.focus();
+                showAddEmpModalAlert('Username must start with a lowercase letter and cannot be numbers only.', 'danger');
+                highlightAddEmpErrorField('newEmpUsername');
                 return;
             }
             if (!/^[a-z][a-z0-9._]{2,29}$/.test(username)) {
-                showAlert('Username must be 3-30 characters long, starting with a lowercase letter, and contain only lowercase letters, digits, dots or underscores.', 'danger');
-                document.getElementById('newEmpUsername')?.focus();
+                showAddEmpModalAlert('Username must be 3-30 characters long, starting with a lowercase letter, and contain only lowercase letters, digits, dots or underscores.', 'danger');
+                highlightAddEmpErrorField('newEmpUsername');
                 return;
             }
 
             // 4. Password Validation (Min 6 characters, mixed letters and numbers/symbols)
             if (password.length < 6) {
-                showAlert('Initial Password must be at least 6 characters long.', 'danger');
-                document.getElementById('newEmpPassword')?.focus();
+                showAddEmpModalAlert('Initial Password must be at least 6 characters long.', 'danger');
+                highlightAddEmpErrorField('newEmpPassword');
                 return;
             }
             const hasLetter = /[a-zA-Z]/.test(password);
             const hasNumberOrSymbol = /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
             if (!hasLetter || !hasNumberOrSymbol) {
-                showAlert('Initial Password must contain a mix of letters and numbers/symbols (e.g. EmployeePass2026!).', 'danger');
-                document.getElementById('newEmpPassword')?.focus();
+                showAddEmpModalAlert('Initial Password must contain a mix of letters and numbers/symbols (e.g. EmployeePass2026!). Passwords with only numbers are not permitted.', 'danger');
+                highlightAddEmpErrorField('newEmpPassword');
                 return;
             }
 
             // 5. Reporting Manager Validation (if provided, must not contain numbers)
             if (reportingManager) {
                 if (/\d/.test(reportingManager)) {
-                    showAlert('Reporting Manager cannot contain numbers. Only letters and standard name characters are permitted.', 'danger');
-                    document.getElementById('newEmpManager')?.focus();
+                    showAddEmpModalAlert('Reporting Manager cannot contain numbers. Only letters and standard name characters are permitted.', 'danger');
+                    highlightAddEmpErrorField('newEmpManager');
                     return;
                 }
                 if (!/^[a-zA-Z\s.'-]+$/.test(reportingManager)) {
-                    showAlert('Reporting Manager contains invalid characters. Only letters and standard name characters are allowed.', 'danger');
-                    document.getElementById('newEmpManager')?.focus();
+                    showAddEmpModalAlert('Reporting Manager contains invalid characters. Only letters and standard name characters are allowed.', 'danger');
+                    highlightAddEmpErrorField('newEmpManager');
                     return;
                 }
             }
@@ -4358,7 +4419,11 @@ function initAddEmployeeModal() {
 
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
-                    showAlert(err.message || 'Failed to create employee account.', 'danger');
+                    const errMsg = err.message || 'Failed to create employee account.';
+                    showAddEmpModalAlert(errMsg, 'danger');
+                    if (errMsg.toLowerCase().includes('username')) highlightAddEmpErrorField('newEmpUsername');
+                    else if (errMsg.toLowerCase().includes('password')) highlightAddEmpErrorField('newEmpPassword');
+                    else if (errMsg.toLowerCase().includes('name')) highlightAddEmpErrorField('newEmpFullName');
                     return;
                 }
 
@@ -4375,7 +4440,7 @@ function initAddEmployeeModal() {
                     submitBtn.innerHTML = originalBtnText;
                 }
                 console.error('Error creating employee:', err);
-                showAlert('An unexpected network error occurred while creating the employee.', 'danger');
+                showAddEmpModalAlert('An unexpected network error occurred while creating the employee.', 'danger');
             }
         });
     }

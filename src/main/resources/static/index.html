@@ -1657,6 +1657,15 @@
             <form id="addEmployeeForm">
                 <div class="modal-body" style="padding: 1.5rem; max-height: 75vh; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
                     
+                    <!-- In-Modal Alert Box for Validation & Errors -->
+                    <div id="addEmpModalAlert" class="alert-banner alert-danger" style="display: none; border-radius: 8px; border: 1px solid #fecaca; padding: 0.85rem 1rem; align-items: flex-start; justify-content: space-between; gap: 0.75rem; animation: fadeIn 0.2s ease;">
+                        <div style="display: flex; align-items: flex-start; gap: 0.6rem;">
+                            <span style="font-size: 1.15rem; line-height: 1.2;">⚠️</span>
+                            <span id="addEmpModalAlertMessage" style="font-size: 0.88rem; font-weight: 500; line-height: 1.45;"></span>
+                        </div>
+                        <button type="button" id="addEmpModalAlertClose" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: inherit; line-height: 1; padding: 0 0.25rem;" aria-label="Close message">&times;</button>
+                    </div>
+
                     <!-- 1. Login Credentials Group -->
                     <div class="form-group-card">
                         <div class="form-group-card-header">

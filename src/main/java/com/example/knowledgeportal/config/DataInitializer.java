@@ -140,6 +140,26 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
+        // Normalize all employee emails to official @company.internal structure
+        for (EmployeeProfile p : profileRepository.findAll()) {
+            if (p.getEmail() == null || p.getEmail().isBlank() || !p.getEmail().endsWith("@company.internal")) {
+                String cleanPrefix = p.getEmail() != null && p.getEmail().contains("@")
+                        ? p.getEmail().substring(0, p.getEmail().indexOf('@')).trim().toLowerCase()
+                        : p.getUsername().trim().toLowerCase();
+                if (cleanPrefix.isBlank()) {
+                    cleanPrefix = p.getUsername().trim().toLowerCase();
+                }
+                p.setEmail(cleanPrefix + "@company.internal");
+                profileRepository.save(p);
+            }
+        }
+
+        profileRepository.findByUsernameIgnoreCase("new.testuser").ifPresent(p -> {
+            leaveRecordRepository.findByUsername("new.testuser").ifPresent(leaveRecordRepository::delete);
+            profileRepository.delete(p);
+            userRepository.findByUsernameIgnoreCase("new.testuser").ifPresent(userRepository::delete);
+        });
+
         for (KnowledgeDocument doc : documentRepository.findAll()) {
             boolean changed = false;
             if ("Arthur Administrator".equalsIgnoreCase(doc.getOwner()) || "Arthur".equalsIgnoreCase(doc.getOwner())) {

@@ -15,6 +15,7 @@ const AppState = {
 
 // DOM Ready Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initNavigation();
     initAuthPortal();
     initDashboard();
@@ -33,6 +34,72 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user has an existing active session, or display Auth Portal
     checkSessionOrShowAuth();
 });
+
+// ===================================================================
+// Dark / Light Theme Management
+// ===================================================================
+function initTheme() {
+    let savedTheme = 'light';
+    try {
+        savedTheme = localStorage.getItem('agivant_portal_theme') || 'light';
+    } catch (e) {}
+    applyTheme(savedTheme);
+
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    if (btnThemeToggle) {
+        btnThemeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const nextTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+            applyTheme(nextTheme);
+        });
+    }
+
+    const btnThemeToggleAuth = document.getElementById('btnThemeToggleAuth');
+    if (btnThemeToggleAuth) {
+        btnThemeToggleAuth.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const nextTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+            applyTheme(nextTheme);
+        });
+    }
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+        localStorage.setItem('agivant_portal_theme', theme);
+    } catch (e) {}
+
+    const isDark = (theme === 'dark');
+
+    // Update Header Toggle Button
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    if (btnThemeToggle) {
+        const sunIcon = btnThemeToggle.querySelector('.theme-icon-sun');
+        const moonIcon = btnThemeToggle.querySelector('.theme-icon-moon');
+        const textLabel = document.getElementById('themeToggleText');
+
+        if (sunIcon) sunIcon.style.display = isDark ? 'inline-block' : 'none';
+        if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'inline-block';
+        if (textLabel) textLabel.textContent = isDark ? 'Light' : 'Dark';
+        btnThemeToggle.setAttribute('title', isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme');
+        btnThemeToggle.setAttribute('aria-label', isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme');
+    }
+
+    // Update Auth Screen Toggle Button
+    const btnThemeToggleAuth = document.getElementById('btnThemeToggleAuth');
+    if (btnThemeToggleAuth) {
+        const sunIconAuth = btnThemeToggleAuth.querySelector('.theme-icon-sun');
+        const moonIconAuth = btnThemeToggleAuth.querySelector('.theme-icon-moon');
+        const textLabelAuth = document.getElementById('themeToggleAuthText');
+
+        if (sunIconAuth) sunIconAuth.style.display = isDark ? 'inline-block' : 'none';
+        if (moonIconAuth) moonIconAuth.style.display = isDark ? 'none' : 'inline-block';
+        if (textLabelAuth) textLabelAuth.textContent = isDark ? 'Light' : 'Dark';
+        btnThemeToggleAuth.setAttribute('title', isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme');
+        btnThemeToggleAuth.setAttribute('aria-label', isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme');
+    }
+}
 
 // ===================================================================
 // Authentication & Role-Based Access Control
@@ -4251,6 +4318,12 @@ function openAddEmployeeModal() {
     if (compOffInput) compOffInput.value = '0';
     if (roleSelect) roleSelect.value = 'ROLE_EMPLOYEE';
 
+    const emailPrefixInput = document.getElementById('newEmpEmailPrefix');
+    const emailHiddenInput = document.getElementById('newEmpEmail');
+    if (emailPrefixInput) emailPrefixInput.value = '';
+    if (emailHiddenInput) emailHiddenInput.value = '';
+    window._addEmpEmailPrefixEdited = false;
+
     if (modal) modal.style.display = 'flex';
     const userField = document.getElementById('newEmpUsername');
     if (userField) setTimeout(() => userField.focus(), 60);
@@ -4261,6 +4334,7 @@ function closeAddEmployeeModal() {
     if (modal) modal.style.display = 'none';
     hideAddEmpModalAlert();
     clearAddEmpFieldErrors();
+    window._addEmpEmailPrefixEdited = false;
 }
 
 function initAddEmployeeModal() {
@@ -4269,9 +4343,9 @@ function initAddEmployeeModal() {
     const cancelBtn = document.getElementById('btnAddEmpModalCancel');
     const form = document.getElementById('addEmployeeForm');
     const usernameInput = document.getElementById('newEmpUsername');
-    const emailInput = document.getElementById('newEmpEmail');
+    const emailPrefixInput = document.getElementById('newEmpEmailPrefix');
+    const emailHiddenInput = document.getElementById('newEmpEmail');
     const alertCloseBtn = document.getElementById('addEmpModalAlertClose');
-    let emailManuallyEdited = false;
 
     if (closeBtn) closeBtn.addEventListener('click', closeAddEmployeeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeAddEmployeeModal);
@@ -4283,9 +4357,16 @@ function initAddEmployeeModal() {
         });
     }
 
-    if (emailInput) {
-        emailInput.addEventListener('input', () => {
-            emailManuallyEdited = emailInput.value.trim().length > 0;
+    if (emailPrefixInput) {
+        emailPrefixInput.addEventListener('input', () => {
+            window._addEmpEmailPrefixEdited = emailPrefixInput.value.trim().length > 0;
+            const cleaned = emailPrefixInput.value.toLowerCase().replace(/[^a-z0-9._-]/g, '');
+            if (emailPrefixInput.value !== cleaned) {
+                emailPrefixInput.value = cleaned;
+            }
+            if (emailHiddenInput) {
+                emailHiddenInput.value = cleaned ? `${cleaned}@company.internal` : '';
+            }
         });
     }
 
@@ -4296,12 +4377,11 @@ function initAddEmployeeModal() {
             if (orig !== lower) {
                 usernameInput.value = lower;
             }
-            if (!emailManuallyEdited && emailInput) {
+            if (!window._addEmpEmailPrefixEdited && emailPrefixInput) {
                 const cleanUser = lower.trim().replace(/[^a-z0-9._-]/g, '');
-                if (cleanUser) {
-                    emailInput.value = `${cleanUser}@company.internal`;
-                } else {
-                    emailInput.value = '';
+                emailPrefixInput.value = cleanUser;
+                if (emailHiddenInput) {
+                    emailHiddenInput.value = cleanUser ? `${cleanUser}@company.internal` : '';
                 }
             }
         });
@@ -4322,7 +4402,8 @@ function initAddEmployeeModal() {
             const password = document.getElementById('newEmpPassword')?.value;
             const role = document.getElementById('newEmpRole')?.value || 'ROLE_EMPLOYEE';
             const fullName = document.getElementById('newEmpFullName')?.value.trim();
-            const email = document.getElementById('newEmpEmail')?.value.trim();
+            const emailPrefix = document.getElementById('newEmpEmailPrefix')?.value.trim().toLowerCase();
+            const email = emailPrefix ? `${emailPrefix}@company.internal` : (document.getElementById('newEmpEmail')?.value.trim() || '');
             const employeeCode = document.getElementById('newEmpCode')?.value.trim();
             const department = document.getElementById('newEmpDepartment')?.value;
             const designation = document.getElementById('newEmpDesignation')?.value.trim();
@@ -4336,11 +4417,12 @@ function initAddEmployeeModal() {
             const compOffBalance = parseInt(document.getElementById('newEmpCompOff')?.value || '0', 10);
 
             // 1. Basic Required Fields Check
-            if (!username || !password || !fullName || !department || !designation) {
+            if (!username || !password || !fullName || !department || !designation || !emailPrefix) {
                 showAddEmpModalAlert('Please fill in all required fields marked with *', 'danger');
                 if (!username) highlightAddEmpErrorField('newEmpUsername');
                 else if (!password) highlightAddEmpErrorField('newEmpPassword');
                 else if (!fullName) highlightAddEmpErrorField('newEmpFullName');
+                else if (!emailPrefix) highlightAddEmpErrorField('newEmpEmailPrefix');
                 else if (!department) highlightAddEmpErrorField('newEmpDepartment');
                 else if (!designation) highlightAddEmpErrorField('newEmpDesignation');
                 return;
@@ -4389,7 +4471,24 @@ function initAddEmployeeModal() {
                 return;
             }
 
-            // 5. Reporting Manager Validation (if provided, must not contain numbers)
+            // 5. Corporate Email Validation
+            if (!emailPrefix) {
+                showAddEmpModalAlert('Corporate Email prefix is required.', 'danger');
+                highlightAddEmpErrorField('newEmpEmailPrefix');
+                return;
+            }
+            if (!/^[a-z][a-z0-9._-]{1,29}$/.test(emailPrefix)) {
+                showAddEmpModalAlert('Corporate Email prefix must start with a lowercase letter and contain only lowercase letters, digits, dots, or underscores (2-30 characters).', 'danger');
+                highlightAddEmpErrorField('newEmpEmailPrefix');
+                return;
+            }
+            if (!/^[a-z0-9._-]+@company\.internal$/.test(email)) {
+                showAddEmpModalAlert('Corporate Email must follow the official company format: <username>@company.internal', 'danger');
+                highlightAddEmpErrorField('newEmpEmailPrefix');
+                return;
+            }
+
+            // 6. Reporting Manager Validation (if provided, must not contain numbers)
             if (reportingManager) {
                 if (/\d/.test(reportingManager)) {
                     showAddEmpModalAlert('Reporting Manager cannot contain numbers. Only letters and standard name characters are permitted.', 'danger');
@@ -4442,6 +4541,7 @@ function initAddEmployeeModal() {
                     showAddEmpModalAlert(errMsg, 'danger');
                     if (errMsg.toLowerCase().includes('username')) highlightAddEmpErrorField('newEmpUsername');
                     else if (errMsg.toLowerCase().includes('password')) highlightAddEmpErrorField('newEmpPassword');
+                    else if (errMsg.toLowerCase().includes('email')) highlightAddEmpErrorField('newEmpEmailPrefix');
                     else if (errMsg.toLowerCase().includes('name')) highlightAddEmpErrorField('newEmpFullName');
                     return;
                 }
@@ -4449,7 +4549,7 @@ function initAddEmployeeModal() {
                 const created = await res.json();
                 closeAddEmployeeModal();
                 form.reset();
-                emailManuallyEdited = false;
+                window._addEmpEmailPrefixEdited = false;
                 showAlert(`Employee '${created.fullName}' (@${created.username}) created successfully! They can immediately log into the portal.`, 'success');
                 await loadEmployeesInformation();
 
@@ -4765,15 +4865,17 @@ function renderRecentLeaveApplications(employees) {
     tbody.innerHTML = allRequests.map(req => {
         let statusBadge = '<span class="badge badge-success">✓ Approved</span>';
         if (req.status === 'PENDING') {
-            statusBadge = '<span class="badge badge-warning" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">⏳ Pending Review</span>';
+            statusBadge = '<span class="badge badge-warning">⏳ Pending Review</span>';
         } else if (req.status === 'REJECTED') {
-            statusBadge = '<span class="badge badge-danger" style="background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">✕ Rejected</span>';
+            statusBadge = '<span class="badge badge-danger">✕ Rejected</span>';
         }
 
+        const lt = (req.leaveType || '').toUpperCase();
         let typeBadgeClass = 'leave-pill-blue';
-        if (req.leaveType === 'CASUAL') typeBadgeClass = 'leave-pill-green';
-        else if (req.leaveType === 'SICK') typeBadgeClass = 'leave-pill-purple';
-        else if (req.leaveType === 'WFH') typeBadgeClass = 'leave-pill-amber';
+        if (lt.includes('CASUAL')) typeBadgeClass = 'leave-pill-green';
+        else if (lt.includes('SICK')) typeBadgeClass = 'leave-pill-purple';
+        else if (lt.includes('WFH') || lt.includes('HOME')) typeBadgeClass = 'leave-pill-amber';
+        else if (lt.includes('PLANNED') || lt.includes('ANNUAL')) typeBadgeClass = 'leave-pill-blue';
 
         const dateRange = (req.startDate === req.endDate || !req.endDate)
             ? req.startDate
@@ -4822,7 +4924,7 @@ async function openEmployeeModal(username) {
     try {
         const res = await fetch(`/api/employees/${username}`);
         if (!res.ok) {
-            if (bodyEl) bodyEl.innerHTML = '<div class="alert alert-danger" style="padding: 1rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px;">Unable to load employee details or access is restricted.</div>';
+            if (bodyEl) bodyEl.innerHTML = '<div class="alert alert-danger" style="padding: 1rem; border-radius: 6px;">Unable to load employee details or access is restricted.</div>';
             return;
         }
 
@@ -4841,7 +4943,7 @@ async function openEmployeeModal(username) {
         if (emp.recentLeaveRequests && emp.recentLeaveRequests.length > 0) {
             requestsHtml = emp.recentLeaveRequests.map(r => {
                 let st = '<span class="badge badge-success">✓ Approved</span>';
-                if (r.status === 'PENDING') st = '<span class="badge badge-warning" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">⏳ Pending</span>';
+                if (r.status === 'PENDING') st = '<span class="badge badge-warning">⏳ Pending</span>';
                 else if (r.status === 'REJECTED') st = '<span class="badge badge-danger">✕ Rejected</span>';
                 return `
                     <tr>
@@ -4858,7 +4960,7 @@ async function openEmployeeModal(username) {
         if (bodyEl) {
             bodyEl.innerHTML = `
                 <!-- Profile Summary Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+                <div class="emp-modal-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
                     <div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); display: block;">Official Email</span>
                         <a href="mailto:${escapeHtml(emp.email)}" style="font-weight: 600; color: var(--primary); text-decoration: none;">${escapeHtml(emp.email)}</a>
@@ -4882,7 +4984,7 @@ async function openEmployeeModal(username) {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                     
                     <!-- Planned Leaves -->
-                    <div style="padding: 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div class="emp-modal-balance-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">🏖️ Planned / Annual</span>
                             <span class="leave-pill leave-pill-blue">${emp.plannedLeavesRemaining} left</span>
@@ -4895,7 +4997,7 @@ async function openEmployeeModal(username) {
                     </div>
 
                     <!-- Casual Leaves -->
-                    <div style="padding: 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div class="emp-modal-balance-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">📅 Casual Leaves</span>
                             <span class="leave-pill leave-pill-green">${emp.casualLeavesRemaining} left</span>
@@ -4908,7 +5010,7 @@ async function openEmployeeModal(username) {
                     </div>
 
                     <!-- Sick Leaves -->
-                    <div style="padding: 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div class="emp-modal-balance-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">🩺 Sick Leaves</span>
                             <span class="leave-pill leave-pill-purple">${emp.sickLeavesRemaining} left</span>
@@ -4921,7 +5023,7 @@ async function openEmployeeModal(username) {
                     </div>
 
                     <!-- WFH Allowance -->
-                    <div style="padding: 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div class="emp-modal-balance-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">🏡 Work From Home</span>
                             <span class="leave-pill leave-pill-amber">${emp.wfhRemainingDays} left</span>
@@ -4934,7 +5036,7 @@ async function openEmployeeModal(username) {
                     </div>
 
                     <!-- Comp Off & Request Stats -->
-                    <div style="padding: 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); grid-column: 1/-1;">
+                    <div class="emp-modal-balance-card" style="grid-column: 1/-1;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                             <div>
                                 <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">⚡ Compensatory Off (Comp Off):</span>

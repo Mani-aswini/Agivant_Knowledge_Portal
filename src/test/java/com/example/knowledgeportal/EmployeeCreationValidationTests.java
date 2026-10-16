@@ -34,6 +34,7 @@ public class EmployeeCreationValidationTests {
         req.setUsername("deepa.nair");
         req.setPassword("SecurePass2026!");
         req.setFullName("Deepa Nair");
+        req.setEmail("deepa.nair@company.internal");
         req.setDepartment("Engineering");
         req.setDesignation("Software Engineer");
         req.setReportingManager("Ashwin Mani");
@@ -148,5 +149,21 @@ public class EmployeeCreationValidationTests {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(containsString("Reporting Manager")));
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @DisplayName("Should reject corporate email not ending with @company.internal")
+    void testInvalidCorporateEmailRejected() throws Exception {
+        CreateEmployeeRequest req = createValidRequest();
+        req.setUsername("valid.user");
+        req.setEmail("invalid.email@gmail.com");
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("Email")));
     }
 }

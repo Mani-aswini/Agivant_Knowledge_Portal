@@ -121,10 +121,20 @@ public class EmployeeService {
             }
         }
 
-        // Email
-        String email = req.getEmail() != null && !req.getEmail().isBlank()
-                ? req.getEmail().trim().toLowerCase()
-                : username + "@company.internal";
+        // Validate and enforce Corporate Email structure
+        String rawEmail = req.getEmail() != null ? req.getEmail().trim().toLowerCase() : "";
+        String email;
+        if (rawEmail.isBlank()) {
+            email = username + "@company.internal";
+        } else {
+            if (!rawEmail.endsWith("@company.internal")) {
+                throw new IllegalArgumentException("Corporate Email must use the official company domain '@company.internal' (e.g. " + username + "@company.internal).");
+            }
+            if (!rawEmail.matches("^[a-z0-9._%+-]+@company\\.internal$")) {
+                throw new IllegalArgumentException("Corporate Email format is invalid. It must be in the format <username>@company.internal.");
+            }
+            email = rawEmail;
+        }
 
         String location = req.getLocation() != null && !req.getLocation().isBlank()
                 ? req.getLocation().trim()
@@ -591,8 +601,22 @@ public class EmployeeService {
         d.setUsername(profile.getUsername());
         d.setEmployeeCode(profile.getEmployeeCode());
         d.setFullName(profile.getFullName());
-        d.setEmail(profile.getEmail());
         d.setDepartment(profile.getDepartment());
+        String email = profile.getEmail();
+        if (email != null && !email.isBlank() && !email.endsWith("@company.internal")) {
+            String cleanPrefix = email.contains("@")
+                    ? email.substring(0, email.indexOf('@')).trim().toLowerCase()
+                    : profile.getUsername().trim().toLowerCase();
+            if (cleanPrefix.isBlank()) {
+                cleanPrefix = profile.getUsername().trim().toLowerCase();
+            }
+            email = cleanPrefix + "@company.internal";
+            profile.setEmail(email);
+            try {
+                profileRepository.save(profile);
+            } catch (Exception ignored) {}
+        }
+        d.setEmail(email != null && !email.isBlank() ? email : profile.getUsername().toLowerCase() + "@company.internal");
         d.setDesignation(profile.getDesignation());
         d.setDateOfJoining(profile.getDateOfJoining());
         d.setLocation(profile.getLocation());

@@ -29,6 +29,9 @@ public class CreateEmployeeRequest {
             message = "Full Name must contain only alphabetic letters, spaces, and standard name characters (cannot be numbers or numeric only)")
     private String fullName;
 
+    @NotBlank(message = "Corporate Email is required")
+    @Pattern(regexp = "^[a-z0-9._%+-]+@company\\.internal$",
+            message = "Corporate Email must follow the official company format: <username>@company.internal")
     private String email;
 
     @NotBlank(message = "Department is required")

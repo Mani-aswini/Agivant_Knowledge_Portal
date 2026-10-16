@@ -3500,16 +3500,32 @@ async function openFullDocumentReader(documentId) {
         openTabBtn.style.display = 'inline-block';
 
         if (isPdf) {
-            // Render native browser PDF viewer inside iframe preserving original page structure
-            bodyEl.innerHTML = `
-                <iframe src="${fileUrl}" 
-                        style="width: 100%; height: 68vh; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #525659;" 
-                        title="PDF Document Viewer">
-                    <p>Your browser does not support embedded PDF viewing. 
-                       <a href="${fileUrl}" target="_blank">Click here to open the PDF</a>.
-                    </p>
-                </iframe>
-            `;
+            try {
+                const fileRes = await fetch(fileUrl);
+                const contentType = (fileRes.headers.get('content-type') || '').toLowerCase();
+                if (fileRes.ok && contentType.includes('application/pdf')) {
+                    // Native PDF binary is present on disk: embed browser PDF viewer
+                    bodyEl.innerHTML = `
+                        <iframe src="${fileUrl}" 
+                                style="width: 100%; height: 68vh; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #525659;" 
+                                title="PDF Document Viewer">
+                            <p>Your browser does not support embedded PDF viewing. 
+                               <a href="${fileUrl}" target="_blank">Click here to open the PDF</a>.
+                            </p>
+                        </iframe>
+                    `;
+                } else if (fileRes.ok) {
+                    // Fallback: If original binary PDF was cleared from ephemeral disk (e.g. Render restart),
+                    // render the complete database searchable text in the clean structured reading view
+                    const textContent = await fileRes.text();
+                    bodyEl.innerHTML = renderStructuredDocumentContent(textContent, chunks, doc);
+                } else {
+                    bodyEl.innerHTML = renderStructuredDocumentContent('', chunks, doc);
+                }
+            } catch (err) {
+                console.error('Error fetching document file:', err);
+                bodyEl.innerHTML = renderStructuredDocumentContent('', chunks, doc);
+            }
         } else {
             // Fetch complete document text and render structured layout
             const fileRes = await fetch(fileUrl);

@@ -530,6 +530,34 @@ public class AiResearchAgentTests {
     }
 
     @Test
+    @DisplayName("Conversational 6: Natural interactions like 'ok', 'okay', 'got it', 'sure', 'alright' return natural acknowledgment and not insufficient evidence")
+    void testNaturalInteractionsHandledAsConversational() {
+        Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");
+
+        String[] affirmations = {"ok", "okay", "k", "kk", "ok got it", "got it", "understood", "sure", "alright", "cool", "perfect", "sounds good", "yes", "done", "noted"};
+        for (String aff : affirmations) {
+            AskResponse res = aiResearchAgent.ask(new AskRequest(aff), employeeAuth);
+            assertNotNull(res, "Response must not be null for: " + aff);
+            assertFalse(res.isAbstained(), "Affirmation '" + aff + "' must NOT be abstained");
+            assertEquals("CONVERSATIONAL", res.getMode(), "Affirmation '" + aff + "' must have CONVERSATIONAL mode");
+            assertTrue(res.getAnswer().contains("Understood") || res.getAnswer().contains("assist") || res.getAnswer().contains("help"),
+                    "Affirmation '" + aff + "' must return natural confirmation: " + res.getAnswer());
+            assertFalse(res.getAnswer().contains("insufficient evidence"),
+                    "Affirmation '" + aff + "' must NOT return insufficient evidence: " + res.getAnswer());
+        }
+
+        // Test dismissals: "no", "no thanks"
+        String[] dismissals = {"no", "nope", "no thanks", "nothing"};
+        for (String dis : dismissals) {
+            AskResponse res = aiResearchAgent.ask(new AskRequest(dis), employeeAuth);
+            assertNotNull(res, "Response must not be null for: " + dis);
+            assertFalse(res.isAbstained(), "Dismissal '" + dis + "' must NOT be abstained");
+            assertEquals("CONVERSATIONAL", res.getMode(), "Dismissal '" + dis + "' must have CONVERSATIONAL mode");
+            assertTrue(res.getAnswer().contains("No problem"), "Must return friendly dismissal for: " + dis);
+        }
+    }
+
+    @Test
     @DisplayName("Out-of-Domain Query: Question with no matching internal document returns insufficient evidence message")
     void testOutOfDomainQuestionReturnsInsufficientEvidence() {
         Authentication employeeAuth = createAuth("aswini", "ROLE_EMPLOYEE");

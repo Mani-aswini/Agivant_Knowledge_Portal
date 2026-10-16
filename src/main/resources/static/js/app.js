@@ -401,7 +401,7 @@ function applyUserPermissions(user) {
     const aiSectionHeading = document.getElementById('aiSectionHeading');
     const aiSectionDesc = document.getElementById('aiSectionDesc');
     if (aiSectionHeading) {
-        aiSectionHeading.textContent = isAdminOrHr ? 'AI Research Agent' : 'Ask a Question';
+        aiSectionHeading.textContent = 'Agivant AI Assistant';
     }
     if (aiSectionDesc) {
         aiSectionDesc.textContent = isAdminOrHr
@@ -2815,8 +2815,27 @@ async function sendChatMessage(questionText) {
     appendUserMessage(query, nowIso, true, turnId);
 
     // 2. Show typing indicator & scroll
-    if (typingIndicator) {
+    const stream = document.getElementById('chatMessagesStream');
+    let typingInterval = null;
+    if (typingIndicator && stream) {
+        stream.appendChild(typingIndicator);
         typingIndicator.style.display = 'flex';
+        const typingText = document.getElementById('chatTypingText') || typingIndicator.querySelector('.typing-text');
+        if (typingText) {
+            typingText.textContent = 'Agivant AI is thinking...';
+        }
+        let step = 0;
+        typingInterval = setInterval(() => {
+            step++;
+            if (!typingText) return;
+            if (step === 1) {
+                typingText.textContent = 'Searching company documents...';
+            } else if (step === 2) {
+                typingText.textContent = 'Synthesizing verified answer...';
+            } else if (step >= 3) {
+                typingText.textContent = 'Preparing response...';
+            }
+        }, 1800);
         scrollChatToBottom(true);
     }
 
@@ -2834,6 +2853,7 @@ async function sendChatMessage(questionText) {
             body: JSON.stringify(payload)
         });
 
+        if (typingInterval) clearInterval(typingInterval);
         if (typingIndicator) typingIndicator.style.display = 'none';
 
         if (!res.ok) {
@@ -2898,6 +2918,7 @@ async function sendChatMessage(questionText) {
 
     } catch (err) {
         console.error('Chat error:', err);
+        if (typingInterval) clearInterval(typingInterval);
         if (typingIndicator) typingIndicator.style.display = 'none';
         appendAssistantMessage({
             answer: "Network error communicating with AI agent. Please check your network and try again.",
@@ -2905,6 +2926,8 @@ async function sendChatMessage(questionText) {
             answerReference: 'NET-ERR'
         }, new Date().toISOString(), true, turnId);
     } finally {
+        if (typingInterval) clearInterval(typingInterval);
+        if (typingIndicator) typingIndicator.style.display = 'none';
         isChatSubmitting = false;
         if (sendBtn) sendBtn.disabled = false;
         if (chatInput) chatInput.focus();

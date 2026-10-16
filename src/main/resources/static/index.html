@@ -15,7 +15,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=18">
+    <link rel="stylesheet" href="css/styles.css?v=23">
     <!-- Immediate Theme Initialization to prevent flash of wrong theme -->
     <script>
         (function() {
@@ -68,7 +68,7 @@
             <!-- Integrated Brand Header with Agivant Gradient Logo -->
             <div class="auth-brand-wrap">
                 <div class="brand-agivant-logo-wrap">
-                    <img src="images/agivant-logo-gradient.png" alt="Agivant Logo" class="agivant-brand-logo">
+                    <img src="images/agivant-logo-extracted.png" alt="Agivant Logo" class="agivant-brand-logo">
                 </div>
                 <h2 class="auth-portal-title">Agivant Knowledge Portal</h2>
                 <p class="auth-portal-subtitle">Sign in to your enterprise workspace</p>
@@ -856,7 +856,7 @@
 
                                     <!-- Typing indicator -->
                                     <div id="chatTypingIndicator" class="chat-typing-row" style="display: none;">
-                                        <div class="chat-msg-avatar assistant-avatar">
+                                        <div class="chat-msg-avatar assistant-avatar" title="Agivant AI">
                                             <img src="images/agivant-logo-gradient.png" alt="Agivant AI"
                                                 class="avatar-mini">
                                         </div>
@@ -866,8 +866,7 @@
                                                 <span></span>
                                                 <span></span>
                                             </div>
-                                            <span class="typing-text">Searching company documents and synthesizing
-                                                answer...</span>
+                                            <span class="typing-text" id="chatTypingText">Agivant AI is thinking...</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2203,7 +2202,7 @@
     </div>
 
     <!-- Application JavaScript -->
-    <script src="js/app.js?v=13"></script>
+    <script src="js/app.js?v=15"></script>
 
 </body>
 

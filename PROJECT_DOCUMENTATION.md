@@ -426,6 +426,75 @@ Provide system administrators with full visibility into platform operations, use
 
 ---
 
+### Scenario 7: User Feedback Collection & Portal Quality Analytics
+
+#### 7.1 Business Objective
+Empower enterprise employees to rate AI-generated answers and retrieved knowledge on a 1–5 star scale with contextual qualitative comments, while providing HR Specialists and System Administrators with centralized quality analytics, real-time satisfaction score KPIs, star-rating distribution breakdowns, and an auditable review dashboard with document cross-referencing.
+
+#### 7.2 Step-by-Step Execution Flow
+```
+[User Submits Star Rating & Review]
+       |
+       v
+1. HTML (index.html):
+   - User clicks star rating (1–5) or '#btnWriteFeedback' on AI assistant response bubble.
+   - Feedback modal (#feedbackModal) opens with pre-populated question & answer citation.
+       |
+       v
+2. JavaScript (app.js):
+   - submitFeedback() validates rating input (1 to 5) and constructs JSON payload:
+     { documentId, question, answerReference, rating, comment, answerText }
+   - Dispatches POST /api/knowledge/feedback.
+       |
+       v
+3. Controller (FeedbackController.java):
+   - submitFeedback() validates payload using JSR-380 (@Min(1), @Max(5), @NotBlank).
+   - Injects Spring Security Authentication context and forwards to FeedbackService.
+       |
+       v
+4. Security & Access Control (PermissionService.java):
+   - Resolves authenticated principal (username).
+   - If documentId is present, executes validateDocumentAccess(auth, document) to prevent
+     clearance circumvention across confidential policies.
+       |
+       v
+5. Service Persistence & Audit (FeedbackService.java & AuditLogService.java):
+   - Instantiates KnowledgeFeedback entity and persists to MySQL via KnowledgeFeedbackRepository.
+   - Logs audit trail event ('SUBMIT_FEEDBACK') with rating and document metadata.
+   - Returns FeedbackResponse with confirmation message.
+       |
+       v
+6. HR & Admin Analytics Review Flow (Screen G):
+   - HR or Admin navigates to 'Feedback Analytics' (#tabFeedback in navigation sitemap).
+   - app.js invokes GET /api/knowledge/feedback?rating={filter}&search={query}.
+   - FeedbackService.getFeedbackManagement():
+     * Enforces ROLE_HR or ROLE_ADMIN clearance via PermissionService.validateAdminOrHr().
+     * Calculates total submissions, average satisfaction score (rounded to 1 decimal).
+     * Computes 1-to-5 star rating distribution map.
+     * Enriches feedback records with document title, category, and version numbers.
+     * Returns FeedbackManagementResponse.
+       |
+       v
+7. UI Rendering (app.js):
+   - Renders overall average rating score card (#feedbackAvgScore) and total feedback count.
+   - Visualizes proportional star distribution progress bars (#starDist5 to #starDist1).
+   - Populates historical feedback review table with star badges, user IDs, questions, and comments.
+```
+
+#### 7.3 Key Files Involved
+- [index.html](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/resources/static/index.html)
+- [app.js](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/resources/static/js/app.js)
+- [FeedbackController.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/controller/FeedbackController.java)
+- [FeedbackService.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/service/FeedbackService.java)
+- [KnowledgeFeedbackRepository.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/repository/KnowledgeFeedbackRepository.java)
+- [KnowledgeFeedback.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/entity/KnowledgeFeedback.java)
+- [FeedbackRequest.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/dto/FeedbackRequest.java)
+- [FeedbackResponse.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/dto/FeedbackResponse.java)
+- [FeedbackManagementResponse.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/dto/FeedbackManagementResponse.java)
+- [FeedbackAdminItemResponse.java](file:///c:/Users/AswiniMani/Desktop/Enterprise_KG_RAG/src/main/java/com/example/knowledgeportal/dto/FeedbackAdminItemResponse.java)
+
+---
+
 ## 5. Complete REST API Catalogue Reference
 
 | Module | HTTP Method | Endpoint URI | Permitted Roles | Request Payload | Response DTO |
@@ -490,16 +559,19 @@ Provide system administrators with full visibility into platform operations, use
 | indexing_status    |                     | token_count       |
 | created_at         |                     +-------------------+
 +--------------------+
-         | 1:N
-         v
-+--------------------+
-|  document_version  |
-+--------------------+
-| id (PK)            |
-| document_id (FK)   |
-| version_number     |
-| file_hash          |
-+--------------------+
+         | 1:N                             +--------------------+
+         |-------------------------------- | knowledge_feedback |
+         |                                 +--------------------+
+         |                                 | id (PK)            |
+         v                                 | document_id (FK)   |
++--------------------+                     | user_id            |
+|  document_version  |                     | rating (1-5)       |
++--------------------+                     | question           |
+| id (PK)            |                     | answer_reference   |
+| document_id (FK)   |                     | comment            |
+| version_number     |                     | answer_text        |
+| file_hash          |                     | created_at         |
++--------------------+                     +--------------------+
 ```
 
 ---

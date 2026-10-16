@@ -673,7 +673,18 @@ public class AiResearchAgent {
 
         // 5. Farewells: bye, goodbye, see you
         if (normalized.matches("^(bye+|goodbye+|bye\\s+bye|see\\s+(you|ya)|talk\\s+to\\s+you\\s+later)$") ||
-                normalized.matches("^have\\s+a\\s+(great|good|nice)\\s+day$")) {
+                normalized.matches("^have\\s+a\\s+(great|good|nice)\\s+day$") ||
+                normalized.equals("good night") || normalized.equals("gn")) {
+            return true;
+        }
+
+        // 6. Acknowledgments, Confirmations & Agreement: ok, okay, k, kk, got it, understood, sure, alright, fine, cool, perfect, etc.
+        if (normalized.matches("^(o+k+|o+k+a+y+|k+|k+k+|o+k+i+e+|o+k+e+y+|k+k+a+y+|o+k+i+e+s)(\\s+(then|there|bro|agent|buddy|assistant|bot|friend|team|sir|maam))?$") ||
+                normalized.matches("^(o+k+|o+k+a+y+)\\s+(got\\s+it|understood|cool|fine|sure|great|perfect|nice|sounds\\s+good|done|noted|thanks|thank\\s+you).*") ||
+                normalized.matches("^(got\\s+it|understood|i\\s+understand|i\\s+see|makes\\s+sense|sounds\\s+good|sounds\\s+great)(\\s+(to\\s+me|now))?$") ||
+                normalized.matches("^(sure|sure\\s+thing|alright|all\\s+right|alrighty|fine|cool|perfect|awesome|great|excellent|super|wonderful|nice|done|noted|noted\\s+with\\s+thanks)$") ||
+                normalized.matches("^(yes|yeah|yep|yup|ya+|yea+|correct|right|true|exactly|definitely|absolutely)$") ||
+                normalized.matches("^(no|nope|nah|not\\s+really|nothing|no\\s+thanks|no\\s+thank\\s+you|nevermind|never\\s+mind)$")) {
             return true;
         }
 
@@ -698,24 +709,40 @@ public class AiResearchAgent {
         String answer;
         String refCategory = "CONV-GREETING";
 
-        // 1. Gratitude
-        if (normalized.contains("thank") || normalized.contains("thx") || normalized.contains("appreciat")) {
+        // 1. Negative dismissals (no, nope, nothing, no thanks)
+        if (normalized.matches("^(no|nope|nah|not really|nothing|no thanks|no thank you|nevermind|never mind)$")) {
+            refCategory = "CONV-DISMISSAL";
+            answer = "No problem at all, " + firstName + "! 👍\n\n"
+                    + "I'm standing by whenever you need help. Have a wonderful rest of your day!";
+        }
+        // 2. Gratitude
+        else if (normalized.contains("thank") || normalized.contains("thx") || normalized.contains("appreciat")) {
             refCategory = "CONV-GRATITUDE";
             answer = "You're very welcome, " + firstName + "! 😊\n\n"
                     + "I'm always here to help you with company policies, leave records, or internal documentation. Feel free to ask whenever you need anything!";
         }
-        // 2. Farewells
-        else if (normalized.contains("bye") || normalized.contains("see you") || normalized.contains("see ya") || normalized.contains("have a")) {
+        // 3. Farewells
+        else if (normalized.contains("bye") || normalized.contains("see you") || normalized.contains("see ya") || normalized.contains("have a") || normalized.equals("good night") || normalized.equals("gn")) {
             refCategory = "CONV-FAREWELL";
             answer = "Goodbye, " + firstName + "! 👋 Have a great and productive day ahead! Don't hesitate to reach back out if you have any questions.";
         }
-        // 3. Wellbeing
+        // 4. Acknowledgments, Confirmations & Agreement (ok, okay, got it, understood, sure, alright, cool, perfect, yes, etc.)
+        else if (normalized.matches("^(o+k+|o+k+a+y+|k+|k+k+|o+k+i+e+|o+k+e+y+|k+k+a+y+|o+k+i+e+s)(\\s+.*)?$") ||
+                normalized.contains("got it") || normalized.contains("understood") || normalized.contains("makes sense") ||
+                normalized.contains("sounds good") || normalized.contains("sounds great") ||
+                normalized.matches("^(sure|sure thing|alright|all right|alrighty|fine|cool|perfect|awesome|great|excellent|super|wonderful|nice|done|noted|noted with thanks)$") ||
+                normalized.matches("^(yes|yeah|yep|yup|ya+|yea+|correct|right|true|exactly|definitely|absolutely)$")) {
+            refCategory = "CONV-ACKNOWLEDGMENT";
+            answer = "Understood, " + firstName + "! 👍\n\n"
+                    + "Feel free to let me know if you need assistance with anything else — such as checking your leave balances, searching company policies, or looking up colleague information!";
+        }
+        // 5. Wellbeing
         else if (normalized.contains("how are") || normalized.contains("how r") || normalized.contains("how s it going") || normalized.contains("how is it going")) {
             refCategory = "CONV-STATUS";
             answer = "I'm doing well and fully operational, " + firstName + "! 😊 Thank you for asking.\n\n"
                     + "I'm ready to assist you. You can ask me about your leave balances, look up team member details, or ask questions about our corporate handbooks and technical policies. What can I help you with today?";
         }
-        // 4. Identity or Capabilities
+        // 6. Identity or Capabilities
         else if (normalized.contains("who are") || normalized.contains("who r") || normalized.contains("what are you") ||
                 normalized.contains("what is your name") || normalized.contains("what can you do") ||
                 normalized.contains("help") || normalized.contains("what do you do") || normalized.contains("capabilities")) {
@@ -731,7 +758,7 @@ public class AiResearchAgent {
                     + "• **Policies & Guides**: Inquire about remote work allowances, travel guidelines, healthcare benefits, security standards, and IT runbooks.\n\n"
                     + "How may I assist you right now?";
         }
-        // 5. Default Greeting (hi, hii, hello, hey, good morning, hii agent, etc.)
+        // 7. Default Greeting (hi, hii, hello, hey, good morning, hii agent, etc.)
         else {
             refCategory = "CONV-GREETING";
             answer = "Hello " + firstName + "! 👋\n\n"
